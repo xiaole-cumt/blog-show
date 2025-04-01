@@ -20,16 +20,16 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="end to end 源码解析（GPDNet）BatchNorm1d 对输入 ( x )（形状 (B, C, N)）的每个通道 ( c ) 进行以下操作：  计算批次均值和方差  均值：$$ \mu_c &#x3D; \frac{1}{B \cdot N} \sum_{b&#x3D;1}^{B} \sum_{n&#x3D;1}^{N} x_{b,c,n}$$  方差：$$ \sigma_c^2 &amp;">
+  <meta name="description" content="end to end 源码解析（GPDNet） BatchNorm1d 对输入 ( x )（形状 (B, C, N)）的每个通道 ( c ) 进行以下操作：   计算批次均值和方差   均值： $$ \mu_c &#x3D; \frac{1}{B \cdot N} \sum_{b&#x3D;1}^{B} \sum_{n&#x3D;1}^{N} x_{b,c,n} $$   方差： $$ \sigma_c^2 &#x3D; \frac{1">
 <meta property="og:type" content="article">
 <meta property="og:title" content="end to end源码解析（GPDNet）">
 <meta property="og:url" content="http://example.com/2025/03/31/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88GPDNet%EF%BC%89/index.html">
 <meta property="og:site_name" content="小乐的日记本">
-<meta property="og:description" content="end to end 源码解析（GPDNet）BatchNorm1d 对输入 ( x )（形状 (B, C, N)）的每个通道 ( c ) 进行以下操作：  计算批次均值和方差  均值：$$ \mu_c &#x3D; \frac{1}{B \cdot N} \sum_{b&#x3D;1}^{B} \sum_{n&#x3D;1}^{N} x_{b,c,n}$$  方差：$$ \sigma_c^2 &amp;">
+<meta property="og:description" content="end to end 源码解析（GPDNet） BatchNorm1d 对输入 ( x )（形状 (B, C, N)）的每个通道 ( c ) 进行以下操作：   计算批次均值和方差   均值： $$ \mu_c &#x3D; \frac{1}{B \cdot N} \sum_{b&#x3D;1}^{B} \sum_{n&#x3D;1}^{N} x_{b,c,n} $$   方差： $$ \sigma_c^2 &#x3D; \frac{1">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250401151816127.png">
 <meta property="article:published_time" content="2025-03-30T16:00:00.000Z">
-<meta property="article:modified_time" content="2025-04-01T09:42:36.308Z">
+<meta property="article:modified_time" content="2025-04-01T12:38:11.806Z">
 <meta property="article:author" content="小乐">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250401151816127.png">
@@ -78,7 +78,11 @@
   </style>
 </noscript>
 
-</head>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
   <div class="container use-motion">
@@ -182,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2025-04-01 17:42:36" itemprop="dateModified" datetime="2025-04-01T17:42:36+08:00">2025-04-01</time>
+                <time title="修改时间：2025-04-01 20:38:11" itemprop="dateModified" datetime="2025-04-01T20:38:11+08:00">2025-04-01</time>
               </span>
 
           
@@ -196,51 +200,93 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="end-to-end-源码解析（GPDNet）"><a href="#end-to-end-源码解析（GPDNet）" class="headerlink" title="end to end 源码解析（GPDNet）"></a>end to end 源码解析（GPDNet）</h1><p><code>BatchNorm1d</code> 对输入 ( x )（形状 <code>(B, C, N)</code>）的每个通道 ( c ) 进行以下操作：</p>
+        <h1>end to end 源码解析（GPDNet）</h1>
+<p><code>BatchNorm1d</code> 对输入 ( x )（形状 <code>(B, C, N)</code>）的每个通道 ( c ) 进行以下操作：</p>
 <ol>
-<li><p><strong>计算批次均值和方差</strong></p>
+<li>
+<p><strong>计算批次均值和方差</strong></p>
 <ul>
-<li><p>均值：<br>$$<br> \mu_c &#x3D; \frac{1}{B \cdot N} \sum_{b&#x3D;1}^{B} \sum_{n&#x3D;1}^{N} x_{b,c,n}<br>$$</p>
+<li>
+<p>均值：<br>
+$$<br>
+\mu_c = \frac{1}{B \cdot N} \sum_{b=1}^{B} \sum_{n=1}^{N} x_{b,c,n}<br>
+$$</p>
 </li>
-<li><p>方差：<br>$$<br> \sigma_c^2 &#x3D; \frac{1}{B \cdot N} \sum_{b&#x3D;1}^{B} \sum_{n&#x3D;1}^{N} (x_{b,c,n} - \mu_c)^2<br>$$</p>
+<li>
+<p>方差：<br>
+$$<br>
+\sigma_c^2 = \frac{1}{B \cdot N} \sum_{b=1}^{B} \sum_{n=1}^{N} (x_{b,c,n} - \mu_c)^2<br>
+$$</p>
 </li>
 </ul>
 </li>
-<li><p><strong>归一化</strong></p>
+<li>
+<p><strong>归一化</strong></p>
 <ul>
-<li><p>$$<br>\hat{x}<em>{b,c,n} &#x3D; \frac{x</em>{b,c,n} - \mu_c}{\sqrt{\sigma_c^2 + \epsilon}}<br>$$</p>
+<li>
+<p>$$<br>
+\hat{x} _ {b,c,n}=\frac{x_{b,c,n}-\mu_c}{\sqrt{\sigma_c^2+\epsilon}}<br>
+$$</p>
 </li>
-<li><p>$$\epsilon$$ ：小常数（默认 ( 1e-5 )），防止除以零。</p>
+<li>
+<p>$\epsilon$ ：小常数（默认 ( 1e-5 )），防止除以零。</p>
 </li>
 </ul>
 </li>
-<li><p><strong>缩放和平移</strong></p>
+<li>
+<p><strong>缩放和平移</strong></p>
 <ul>
-<li><p>$$<br> y_{b,c,n} &#x3D; \gamma_c \cdot \hat{x}_{b,c,n} + \beta_c<br>$$</p>
+<li>
+<p>$$<br>
+y_{b,c,n} = \gamma_c \cdot \hat{x}_{b,c,n} + \beta_c<br>
+$$</p>
 </li>
-<li><p>( $$\gamma_c$$ )（<code>weight</code>）：缩放参数，形状 <code>(C,)</code>。</p>
+<li>
+<p>$\gamma_c$ （<code>weight</code>）：缩放参数，形状 <code>(C,)</code>。</p>
 </li>
-<li><p>( $$\beta_c$$ )（<code>bias</code>）：平移参数，形状 <code>(C,)</code>。</p>
+<li>
+<p>$\beta_c$ （<code>bias</code>）：平移参数，形状 <code>(C,)</code>。</p>
 </li>
 </ul>
 </li>
 </ol>
-<h2 id="compute-graph"><a href="#compute-graph" class="headerlink" title="compute_graph"></a>compute_graph</h2><p>计算一个输入特征矩阵 h 的图结构中的距离矩阵（欧几里得距离）</p>
+<h2 id="compute-graph">compute_graph</h2>
+<p>计算一个输入特征矩阵 h 的图结构中的距离矩阵（欧几里得距离）</p>
 <p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250401151816127.png" alt="image-20250401151816127"></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">compute_graph</span>(<span class="params">h</span>):</span><br><span class="line">    sq_norms = h * h  <span class="comment">#逐元素相乘</span></span><br><span class="line">    sq_norms = torch.<span class="built_in">sum</span>(sq_norms, <span class="number">2</span>)  <span class="comment">#在特征维度上求和</span></span><br><span class="line">    D = torch.<span class="built_in">abs</span>(</span><br><span class="line">        sq_norms.unsqueeze(<span class="number">2</span>) + sq_norms.unsqueeze(<span class="number">1</span>) - <span class="number">2</span> * torch.matmul(h, h.transpose(<span class="number">1</span>, <span class="number">2</span>)))  <span class="comment"># (B, N, N)</span></span><br><span class="line">    <span class="keyword">return</span> D</span><br></pre></td></tr></table></figure>
-
-<h2 id="myroll"><a href="#myroll" class="headerlink" title="myroll"></a>myroll</h2><p>通过计算一个分割位置，将张量的两部分交换并拼接，从而实现类似循环移位的效果</p>
+<h2 id="myroll">myroll</h2>
+<p>通过计算一个分割位置，将张量的两部分交换并拼接，从而实现类似循环移位的效果</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">myroll</span>(<span class="params">h, shift=<span class="number">0</span>, axis=<span class="number">2</span></span>):</span><br><span class="line">    h_len = h.size()[<span class="number">2</span>]</span><br><span class="line">    d = <span class="built_in">int</span>(h_len - shift)</span><br><span class="line">    <span class="keyword">return</span> torch.cat((h[:, :, d:], h[:, :, :d]), dim=axis)</span><br></pre></td></tr></table></figure>
-
-<h2 id="index-points"><a href="#index-points" class="headerlink" title="index_points"></a>index_points</h2><p>index_points 函数根据给定的索引 idx 从输入批次 batch 中提取样本</p>
+<h2 id="index-points">index_points</h2>
+<p>index_points 函数根据给定的索引 idx 从输入批次 batch 中提取样本</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">index_points</span>(<span class="params">batch, idx</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">  Input:</span></span><br><span class="line"><span class="string">      batch: input batch data, [B, N, C]</span></span><br><span class="line"><span class="string">      idx: sample index data, [B, S]</span></span><br><span class="line"><span class="string">  Return:</span></span><br><span class="line"><span class="string">      new_batch: indexed data, [B, S, C] &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    device = batch.device</span><br><span class="line">    B = batch.shape[<span class="number">0</span>]</span><br><span class="line">    view_shape = <span class="built_in">list</span>(idx.shape)</span><br><span class="line">    view_shape[<span class="number">1</span>:] = [<span class="number">1</span>] * (<span class="built_in">len</span>(view_shape) - <span class="number">1</span>)</span><br><span class="line">    repeat_shape = <span class="built_in">list</span>(idx.shape)</span><br><span class="line">    repeat_shape[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">    batch_indices = torch.arange(B, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)</span><br><span class="line">    new_batch = batch[batch_indices, idx, :]</span><br><span class="line">    <span class="keyword">return</span> new_batch</span><br></pre></td></tr></table></figure>
-
-<h2 id="GConv"><a href="#GConv" class="headerlink" title="GConv"></a>GConv</h2><blockquote>
-<p>输入特征 h [B, N, in_feat]<br>│<br>├─ 动态邻居选择 → 邻居特征 x_tilde1, x_tilde2<br>│  │<br>│  └─ 特征差异 labels &#x3D; x_tilde1 - x_tilde2<br>│<br>├─ 特征变换: labels → F.relu(Linear(in_feat→fnet_feat))<br>│<br>├─ 多尺度拼接: labels1 (stride_th1), labels2 (stride_th2)<br>│<br>├─ 低秩权重生成:<br>│   ├─ theta1 [B<em>K, rank, in_feat]<br>│   ├─ theta2 [B</em>K, rank, out_feat]<br>│   └─ thetal [B<em>K, rank, 1] (注意力权重)<br>│<br>├─ 动态卷积计算:<br>│   x &#x3D; theta1 @ x_tilde1 → 加权 → theta2 @ x → 输出 [B</em>K, out_feat]<br>│<br>├─ 邻域聚合: 距离加权求和 → [B, out_feat, N]<br>│<br>输出特征 [B, out_feat, N]</p>
+<h2 id="GConv">GConv</h2>
+<blockquote>
+<p>输入特征 h [B, N, in_feat]<br>
+│<br>
+├─ 动态邻居选择 → 邻居特征 x_tilde1, x_tilde2<br>
+│  │<br>
+│  └─ 特征差异 labels = x_tilde1 - x_tilde2<br>
+│<br>
+├─ 特征变换: labels → F.relu(Linear(in_feat→fnet_feat))<br>
+│<br>
+├─ 多尺度拼接: labels1 (stride_th1), labels2 (stride_th2)<br>
+│<br>
+├─ 低秩权重生成:<br>
+│   ├─ theta1 [B<em>K, rank, in_feat]<br>
+│   ├─ theta2 [B</em>K, rank, out_feat]<br>
+│   └─ thetal [B<em>K, rank, 1] (注意力权重)<br>
+│<br>
+├─ 动态卷积计算:<br>
+│   x = theta1 @ x_tilde1 → 加权 → theta2 @ x → 输出 [B</em>K, out_feat]<br>
+│<br>
+├─ 邻域聚合: 距离加权求和 → [B, out_feat, N]<br>
+│<br>
+输出特征 [B, out_feat, N]</p>
 </blockquote>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">GConv</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_feat, fnet_feat, out_feat,</span></span><br><span class="line"><span class="params">                 rank_theta, stride_th1, stride_th2, min_nn</span>):</span><br><span class="line">        <span class="built_in">super</span>(GConv, <span class="variable language_">self</span>).__init__()</span><br><span class="line">        <span class="variable language_">self</span>.in_feat = in_feat    <span class="comment">#输入特征的维度（每个节点的特征大小）</span></span><br><span class="line">        <span class="variable language_">self</span>.fnet_feat = fnet_feat    <span class="comment">#中间特征网络的维度</span></span><br><span class="line">        <span class="variable language_">self</span>.out_feat = out_feat   <span class="comment">#输出特征的维度（目标特征大小）</span></span><br><span class="line">        <span class="variable language_">self</span>.rank_theta = rank_theta     <span class="comment">#低秩近似的秩，用于控制计算复杂度</span></span><br><span class="line">        <span class="variable language_">self</span>.stride_th1 = stride_th1	<span class="comment">#分别用于计算theta1和theta2的步幅</span></span><br><span class="line">        <span class="variable language_">self</span>.stride_th2 = stride_th2</span><br><span class="line">        <span class="variable language_">self</span>.min_nn = min_nn    <span class="comment">#每个节点考虑的最近邻居数量</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 初始化权重参数和偏移量</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">#将输入特征映射到中间特征空间</span></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_th0 = torch.nn.Parameter(data=torch.Tensor(in_feat, fnet_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.xavier_normal_(<span class="variable language_">self</span>.W_flayer_th0, gain=<span class="number">1.0</span>)</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_th0 = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, fnet_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_th0)</span><br><span class="line">		<span class="comment">#生成与输入特征相关的theta1</span></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_th1 = torch.nn.Parameter(data=torch.Tensor(fnet_feat, <span class="built_in">int</span>(stride_th1) * rank_theta),</span><br><span class="line">                                               requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.normal_(<span class="variable language_">self</span>.W_flayer_th1, mean=<span class="number">0</span>, std=<span class="number">1.0</span> / (np.sqrt(fnet_feat + <span class="number">0.0</span>) * np.sqrt(in_feat + <span class="number">0.0</span>)))</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_th1 = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, rank_theta, in_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_th1)</span><br><span class="line">		<span class="comment">#生成与输出特征相关的theta2</span></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_th2 = torch.nn.Parameter(data=torch.Tensor(fnet_feat, <span class="built_in">int</span>(stride_th2) * rank_theta),</span><br><span class="line">                                               requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.normal_(<span class="variable language_">self</span>.W_flayer_th2, mean=<span class="number">0</span>, std=<span class="number">1.0</span> / (np.sqrt(fnet_feat + <span class="number">0.0</span>) * np.sqrt(in_feat + <span class="number">0.0</span>)))</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_th2 = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, rank_theta, out_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_th2)</span><br><span class="line">		<span class="comment">#生成加权因子theta</span></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_thl = torch.nn.Parameter(data=torch.Tensor(fnet_feat, rank_theta), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.normal_(<span class="variable language_">self</span>.W_flayer_thl, mean=<span class="number">0</span>, std=<span class="number">1.0</span> / np.sqrt(rank_theta + <span class="number">0.0</span>))</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_thl = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, rank_theta), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_thl)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, h, D</span>):</span><br><span class="line">        B, N, f = h.size()</span><br><span class="line">        <span class="keyword">assert</span> f == <span class="variable language_">self</span>.in_feat</span><br><span class="line">        <span class="keyword">assert</span> D <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># if D is None:</span></span><br><span class="line">        <span class="comment">#     # No previous graph computed..</span></span><br><span class="line">        <span class="comment">#     D = compute_graph(h)</span></span><br><span class="line"></span><br><span class="line">        _, top_idx = torch.topk(-D, k=(<span class="variable language_">self</span>.min_nn + <span class="number">1</span>),</span><br><span class="line">                                dim=-<span class="number">1</span>)  <span class="comment"># (-D is fundamental for following line (i.e. 22)) - [B, N, min_nn + 1]</span></span><br><span class="line">        <span class="comment"># not that &#x27;repeat_interleave&#x27; is not available in torch &lt; 1.1.0</span></span><br><span class="line">        top_idx2 = top_idx[:, :, <span class="number">0</span>].repeat_interleave(<span class="variable language_">self</span>.min_nn, <span class="number">1</span>)  <span class="comment"># expected: [B, N*min_nn]//节点自身</span></span><br><span class="line">        top_idx = top_idx[:, :, <span class="number">1</span>:].reshape(-<span class="number">1</span>, N * <span class="variable language_">self</span>.min_nn)  <span class="comment"># [B, N, min_nn] -&gt; [B, N*min_nn]//其余邻点</span></span><br><span class="line">        x_tilde1 = index_points(h, top_idx)  <span class="comment"># [B, N*min_nn, in_feat]</span></span><br><span class="line">        x_tilde2 = index_points(h, top_idx2)  <span class="comment"># [B, N*min_nn, in_feat]//根据索引找出对应点</span></span><br><span class="line">        labels = x_tilde1 - x_tilde2  <span class="comment"># [B, N*min_nn, in_feat]//差异特征</span></span><br><span class="line">        x_tilde1 = x_tilde1.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat)  <span class="comment"># [B*N*min_nn, in_feat]</span></span><br><span class="line">        labels = labels.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat)  <span class="comment"># [B*N*min_nn, in_feat]</span></span><br><span class="line">        d_labels = torch.<span class="built_in">sum</span>(labels * labels, dim=<span class="number">1</span>).view(-<span class="number">1</span>, <span class="variable language_">self</span>.min_nn)</span><br><span class="line">        <span class="comment">#相当于是一个欧氏距离</span></span><br><span class="line">        <span class="comment"># print(&quot;labels: &quot;, labels.size())</span></span><br><span class="line">        <span class="comment"># print(&quot;d_labels: &quot;, d_labels.size())</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># FORWARD</span></span><br><span class="line">        labels = F.leaky_relu(torch.matmul(labels, <span class="variable language_">self</span>.W_flayer_th0) + <span class="variable language_">self</span>.b_flayer_th0, negative_slope=<span class="number">0.02</span>)</span><br><span class="line">        labels_exp = labels.unsqueeze(<span class="number">1</span>)  <span class="comment"># (B*K, 1, F)</span></span><br><span class="line">	    <span class="comment">#深层拷贝，保证在labels1内容变更时不会影响到labels_exp中存储的数据，保证内存的独立</span></span><br><span class="line">        <span class="comment">#偏移特征//k=N*min</span></span><br><span class="line">        labels1 = labels_exp + <span class="number">0.0</span>  <span class="comment"># [B*K, 3, F=in_feat]</span></span><br><span class="line">        <span class="keyword">for</span> ss <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="built_in">int</span>(<span class="variable language_">self</span>.in_feat / <span class="variable language_">self</span>.stride_th1)):</span><br><span class="line">            labels1 = torch.cat((labels1, myroll(labels_exp, shift=(ss + <span class="number">1</span>) * <span class="variable language_">self</span>.stride_th1, axis=<span class="number">2</span>)),</span><br><span class="line">                                axis=<span class="number">1</span>)  <span class="comment"># (B*K, dlm1/stride, dlm1)</span></span><br><span class="line"></span><br><span class="line">        labels2 = labels_exp + <span class="number">0.0</span>  <span class="comment"># [B*K, 3, F=in_feat]</span></span><br><span class="line">        <span class="keyword">for</span> ss <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="built_in">int</span>(<span class="variable language_">self</span>.out_feat / <span class="variable language_">self</span>.stride_th2)):</span><br><span class="line">            labels2 = torch.cat((labels2, myroll(labels_exp, shift=(ss + <span class="number">1</span>) * <span class="variable language_">self</span>.stride_th2, axis=<span class="number">2</span>)),</span><br><span class="line">                                axis=<span class="number">1</span>)  <span class="comment"># (B*K, dl/stride, dlm1)</span></span><br><span class="line"></span><br><span class="line">        theta1 = torch.matmul(labels1.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat), <span class="variable language_">self</span>.W_flayer_th1)  <span class="comment"># (B*K*dlm1/stride, R*stride)</span></span><br><span class="line">        theta1 = theta1.view(-<span class="number">1</span>, <span class="variable language_">self</span>.rank_theta, <span class="variable language_">self</span>.in_feat) + <span class="variable language_">self</span>.b_flayer_th1</span><br><span class="line"></span><br><span class="line">        theta2 = torch.matmul(labels2.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat), <span class="variable language_">self</span>.W_flayer_th2)  <span class="comment"># (B*K*dl/stride, R*stride)</span></span><br><span class="line">        theta2 = theta2.view(-<span class="number">1</span>, <span class="variable language_">self</span>.rank_theta, <span class="variable language_">self</span>.out_feat) + <span class="variable language_">self</span>.b_flayer_th2</span><br><span class="line"></span><br><span class="line">        thetal = torch.matmul(labels, <span class="variable language_">self</span>.W_flayer_thl) + <span class="variable language_">self</span>.b_flayer_thl  <span class="comment"># (B*K, R)</span></span><br><span class="line">        thetal = thetal.unsqueeze(<span class="number">2</span>)  <span class="comment"># (B*K, R, 1)</span></span><br><span class="line"></span><br><span class="line">        x = torch.matmul(theta1, x_tilde1.unsqueeze(<span class="number">2</span>))  <span class="comment"># (B*K, R, 1)</span></span><br><span class="line">        x = torch.mul(x, thetal)</span><br><span class="line">        <span class="comment"># print(&quot;theta2: &quot;, theta2.size())</span></span><br><span class="line">        <span class="comment"># print(&quot;theta2 permute: &quot;, theta2.permute(0, 2, 1).size())</span></span><br><span class="line">        <span class="comment"># print(&quot;x: &quot;, x.size())</span></span><br><span class="line">        x = torch.matmul(theta2.permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>), x)[:, :, <span class="number">0</span>]  <span class="comment"># (B*K, dl)</span></span><br><span class="line"></span><br><span class="line">        x = x.view(-<span class="number">1</span>, <span class="variable language_">self</span>.min_nn, <span class="variable language_">self</span>.out_feat)  <span class="comment"># (N, d, dl)</span></span><br><span class="line">        x = torch.mul(x, torch.exp(-torch.div(d_labels, <span class="number">10</span>)).unsqueeze(<span class="number">2</span>))</span><br><span class="line">        <span class="comment"># x = torch.sum(x, 1).reshape(-1, N, self.out_feat)  # [B, N, out_feat]</span></span><br><span class="line">        x = torch.<span class="built_in">sum</span>(x, <span class="number">1</span>).reshape(-<span class="number">1</span>, <span class="variable language_">self</span>.out_feat, N)  <span class="comment"># [B, out_feat, N]</span></span><br><span class="line">        <span class="keyword">return</span> x</span><br></pre></td></tr></table></figure>
-
-<h2 id="ConvLayer"><a href="#ConvLayer" class="headerlink" title="ConvLayer"></a>ConvLayer</h2><p>ConvLayer 是一个图卷积层，旨在通过图卷积（GConv）和自环处理来增强节点特征。它可以作为中间层（带批归一化和非线性激活）或最后一层（无这些操作）</p>
+<h2 id="ConvLayer">ConvLayer</h2>
+<p>ConvLayer 是一个图卷积层，旨在通过图卷积（GConv）和自环处理来增强节点特征。它可以作为中间层（带批归一化和非线性激活）或最后一层（无这些操作）</p>
 <blockquote>
 <p>layer_conf：一个字典，包含层的配置参数。</p>
 <p>bn：布尔值，表示是否使用批归一化（默认 True）。</p>
@@ -250,29 +296,31 @@
 <table>
 <thead>
 <tr>
-<th align="center"><strong>作用</strong></th>
+<th style="text-align:center"><strong>作用</strong></th>
 <th><strong>说明</strong></th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="center">保留节点自身信息</td>
+<tbody>
+<tr>
+<td style="text-align:center">保留节点自身信息</td>
 <td>在图卷积中只聚合邻居特征可能导致节点自身特征被稀释，自环机制确保节点原始特征被显式考虑，避免信息丢失。</td>
 </tr>
 <tr>
-<td align="center">增强局部表达能力</td>
+<td style="text-align:center">增强局部表达能力</td>
 <td>通过对自身特征应用独立线性变换（如 <code>self.sl_W</code>），模型能学习平衡自身与邻居特征的贡献，提升局部模式捕获能力。</td>
 </tr>
 <tr>
-<td align="center">类似传统 GCN 中的自环</td>
-<td>传统 GCN 通过邻接矩阵加单位矩阵（( A’ &#x3D; A + I )）实现自环，<code>ConvLayer</code> 用卷积操作模拟，效果类似但更灵活。</td>
+<td style="text-align:center">类似传统 GCN 中的自环</td>
+<td>传统 GCN 通过邻接矩阵加单位矩阵（( A’ = A + I )）实现自环，<code>ConvLayer</code> 用卷积操作模拟，效果类似但更灵活。</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ConvLayer</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, layer_conf, bn=<span class="literal">True</span>, last=<span class="literal">False</span></span>):</span><br><span class="line">        <span class="built_in">super</span>(ConvLayer, <span class="variable language_">self</span>).__init__()</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.block_config = layer_conf</span><br><span class="line">        <span class="variable language_">self</span>.last = last</span><br><span class="line">		<span class="comment">#基于图结构聚合邻居信息，处理输入特征</span></span><br><span class="line">        <span class="variable language_">self</span>.gconv = GConv(in_feat=layer_conf[<span class="string">&#x27;in_feat&#x27;</span>],</span><br><span class="line">                           fnet_feat=layer_conf[<span class="string">&#x27;fnet_feat&#x27;</span>],</span><br><span class="line">                           out_feat=layer_conf[<span class="string">&#x27;out_feat&#x27;</span>],</span><br><span class="line">                           rank_theta=layer_conf[<span class="string">&#x27;rank_theta&#x27;</span>],</span><br><span class="line">                           stride_th1=layer_conf[<span class="string">&#x27;stride_th1&#x27;</span>],</span><br><span class="line">                           stride_th2=layer_conf[<span class="string">&#x27;stride_th2&#x27;</span>],</span><br><span class="line">                           min_nn=layer_conf[<span class="string">&#x27;min_nn&#x27;</span>], )</span><br><span class="line"></span><br><span class="line">        <span class="comment"># SL: self loop</span></span><br><span class="line">        <span class="comment"># SELF LOOP: feature del punto i-esimo / centroide...</span></span><br><span class="line">        <span class="variable language_">self</span>.sl_W = nn.Parameter(data=torch.Tensor(layer_conf[<span class="string">&#x27;out_feat&#x27;</span>], layer_conf[<span class="string">&#x27;in_feat&#x27;</span>], <span class="number">1</span>),</span><br><span class="line">                                 requires_grad=<span class="literal">True</span>)  <span class="comment"># SL Weights</span></span><br><span class="line">        <span class="variable language_">self</span>.sl_b = nn.Parameter(data=torch.Tensor(layer_conf[<span class="string">&#x27;out_feat&#x27;</span>], <span class="number">1</span>), requires_grad=<span class="literal">True</span>)  <span class="comment"># SL bias</span></span><br><span class="line">        nn.init.xavier_normal_(<span class="variable language_">self</span>.sl_W, gain=<span class="number">1.0</span>)</span><br><span class="line">        nn.init.zeros_(<span class="variable language_">self</span>.sl_b)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> last:</span><br><span class="line">            <span class="variable language_">self</span>.BN_layer = nn.BatchNorm1d(layer_conf[<span class="string">&#x27;out_feat&#x27;</span>]) <span class="keyword">if</span> bn <span class="keyword">else</span> Identity()</span><br><span class="line">            <span class="variable language_">self</span>.non_lin = nn.LeakyReLU(negative_slope=<span class="number">0.2</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">lnl_aggregation</span>(<span class="params">self, h_l, h_nl, b</span>):</span><br><span class="line">        <span class="keyword">assert</span> h_l.size() == h_nl.size()</span><br><span class="line">        <span class="keyword">return</span> torch.div(h_l + h_nl, <span class="variable language_">self</span>.block_config[<span class="string">&#x27;min_nn&#x27;</span>] + <span class="number">1</span>) + b</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, t</span>):</span><br><span class="line">        h, D = t  <span class="comment"># [B, N, in_feat], None or [B, N, N]</span></span><br><span class="line">        <span class="keyword">if</span> D <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="comment"># print(&quot;Computing graph&quot;)</span></span><br><span class="line">            D = compute_graph(h)</span><br><span class="line"></span><br><span class="line">        h_nl = <span class="variable language_">self</span>.gconv(h, D)  <span class="comment"># [B, N, in_feat] -&gt; [B, out_feat, N],邻居贡献</span></span><br><span class="line">        h_sl = F.conv1d(</span><br><span class="line">            <span class="built_in">input</span>=h.permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>), weight=<span class="variable language_">self</span>.sl_W, bias=<span class="literal">None</span>, stride=<span class="number">1</span>)  <span class="comment"># [B, N, in_feat] -&gt; [B, out_feat, N]，自身贡献</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># print(&quot;h_nl &quot;, h_nl.size())</span></span><br><span class="line">        <span class="comment"># print(&quot;h_sl &quot;, h_sl.size())</span></span><br><span class="line"></span><br><span class="line">        h = <span class="variable language_">self</span>.lnl_aggregation(h_sl, h_nl, <span class="variable language_">self</span>.sl_b)  <span class="comment">#聚合自环和邻居特征</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.last:</span><br><span class="line">            <span class="string">&quot;&quot;&quot; If last layer should be no BatchNorm nor LeakyReLU &quot;&quot;&quot;</span></span><br><span class="line">            <span class="keyword">return</span> h.permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>), D  <span class="comment"># ([BS, N, out_feat: in_channels], D)</span></span><br><span class="line"></span><br><span class="line">        h = <span class="variable language_">self</span>.non_lin(<span class="variable language_">self</span>.BN_layer(h)).permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>)  <span class="comment"># [BS, out_feat, N] -&gt; [BS, N, out_feat]</span></span><br><span class="line">        <span class="keyword">return</span> h, D  <span class="comment"># ([BS, N, out_feat], D) returns tuple (since it is in nn.Sequential) to next gconv!</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="get-mlp-1d"><a href="#get-mlp-1d" class="headerlink" title="get_mlp_1d"></a>get_mlp_1d</h2><p>3维数据处理的一个多层感知机</p>
+<h2 id="get-mlp-1d">get_mlp_1d</h2>
+<p>3维数据处理的一个多层感知机</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">get_mlp_1d</span>(<span class="params">channels, bn=<span class="literal">True</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    MLP with Conv1D (kernel_size = 1) + BatchNorm1D + LeakyRelu &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Seq(*[</span><br><span class="line">        Seq(nn.Conv1d(channels[i - <span class="number">1</span>], channels[i], kernel_size=<span class="number">1</span>, bias=(<span class="keyword">not</span> bn)),</span><br><span class="line">            nn.BatchNorm1d(channels[i]) <span class="keyword">if</span> bn <span class="keyword">else</span> Identity(),</span><br><span class="line">            nn.LeakyReLU(negative_slope=<span class="number">0.2</span>),</span><br><span class="line">            ) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="built_in">len</span>(channels))])</span><br></pre></td></tr></table></figure>
-
-<h2 id="GPDLocalFE"><a href="#GPDLocalFE" class="headerlink" title="GPDLocalFE"></a>GPDLocalFE</h2><table>
+<h2 id="GPDLocalFE">GPDLocalFE</h2>
+<table>
 <thead>
 <tr>
 <th><strong>类名</strong></th>
@@ -282,7 +330,8 @@
 <th><strong>输出</strong></th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td><code>GPDLocalFE</code></td>
 <td>顶层模块</td>
 <td>整体特征提取：从点云坐标生成高维局部特征，包含预处理和残差结构</td>
@@ -303,9 +352,9 @@
 <td><code>(B, N, in_feat), D</code></td>
 <td><code>(B, out_feat, N)</code></td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">GPDLocalFE</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, configuration</span>):</span><br><span class="line">        <span class="built_in">super</span>(GPDLocalFE, <span class="variable language_">self</span>).__init__()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 预处理</span></span><br><span class="line">        pre_layers = configuration[<span class="string">&quot;pre_Nfeat&quot;</span>]</span><br><span class="line">        <span class="variable language_">self</span>.pre_nn_layers = get_mlp_1d(pre_layers)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 残差块，保证梯度不会消失</span></span><br><span class="line">        <span class="variable language_">self</span>.residual_block1 = Seq()</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(configuration[<span class="string">&quot;conv_n_layers&quot;</span>]):</span><br><span class="line">            <span class="variable language_">self</span>.residual_block1.add_module(name=<span class="string">&quot;conv_&#123;&#125;_layer&quot;</span>.<span class="built_in">format</span>(j),</span><br><span class="line">                                            module=ConvLayer(layer_conf=configuration[<span class="string">&quot;conv_layer&quot;</span>]))</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.residual_block2 = Seq()</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(configuration[<span class="string">&quot;conv_n_layers&quot;</span>]):</span><br><span class="line">            <span class="variable language_">self</span>.residual_block2.add_module(name=<span class="string">&quot;conv_&#123;&#125;_layer&quot;</span>.<span class="built_in">format</span>(j),</span><br><span class="line">                                            module=ConvLayer(layer_conf=configuration[<span class="string">&quot;conv_layer&quot;</span>]))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 输出层</span></span><br><span class="line">        last_l_conf = configuration[<span class="string">&quot;lconv_layer&quot;</span>]</span><br><span class="line">        <span class="variable language_">self</span>.l_conv = ConvLayer(layer_conf=last_l_conf, last=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Xavier Weights initialization: nn.Conv1d, nn.Linear, BatchNorm1d</span></span><br><span class="line">        <span class="variable language_">self</span>._initialize_weights()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_initialize_weights</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">for</span> m <span class="keyword">in</span> <span class="variable language_">self</span>.modules():</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">isinstance</span>(m, nn.Conv1d) <span class="keyword">or</span> <span class="built_in">isinstance</span>(m, nn.Linear):</span><br><span class="line">                nn.init.xavier_normal_(m.weight)</span><br><span class="line">                <span class="keyword">if</span> m.bias <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">                    nn.init.constant_(m.bias, <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">elif</span> <span class="built_in">isinstance</span>(m, nn.BatchNorm1d):  <span class="comment"># very similar to resnet</span></span><br><span class="line">                nn.init.constant_(m.weight, <span class="number">1</span>)</span><br><span class="line">                nn.init.constant_(m.bias, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, points</span>):</span><br><span class="line">        points = points.permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>)  <span class="comment"># [B, N, 3] -&gt; [B, 3, N]</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># PRE - Simply MLP1Ds</span></span><br><span class="line">        h = <span class="variable language_">self</span>.pre_nn_layers(points).permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>)  <span class="comment"># [B, N, in_channels] -&gt; [B, N, in_feat]</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># RESIDUAL BLOCK 1</span></span><br><span class="line">        x1, _ = <span class="variable language_">self</span>.residual_block1((h, <span class="literal">None</span>))  <span class="comment"># None: compute graph 1, [B, N, in_feat] -&gt; [B, N, out_feat]</span></span><br><span class="line">        h = x1 + h  <span class="comment"># 残差链接第一次</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># RESIDUAL BLOCK 2</span></span><br><span class="line">        x2, _ = <span class="variable language_">self</span>.residual_block2((h, <span class="literal">None</span>))  <span class="comment"># computing graph 2</span></span><br><span class="line">        h = x2 + h  <span class="comment"># 残差链接第二次</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># LAST BLOCK out_feat -&gt; in_channels</span></span><br><span class="line">        x3, _ = <span class="variable language_">self</span>.l_conv((h, <span class="literal">None</span>))  <span class="comment"># computing graph 3</span></span><br><span class="line">        <span class="keyword">return</span> x3</span><br></pre></td></tr></table></figure>
-
 
     </div>
 
@@ -386,7 +435,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#end-to-end-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88GPDNet%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">end to end 源码解析（GPDNet）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#compute-graph"><span class="nav-number">1.1.</span> <span class="nav-text">compute_graph</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#myroll"><span class="nav-number">1.2.</span> <span class="nav-text">myroll</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#index-points"><span class="nav-number">1.3.</span> <span class="nav-text">index_points</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GConv"><span class="nav-number">1.4.</span> <span class="nav-text">GConv</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ConvLayer"><span class="nav-number">1.5.</span> <span class="nav-text">ConvLayer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-mlp-1d"><span class="nav-number">1.6.</span> <span class="nav-text">get_mlp_1d</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPDLocalFE"><span class="nav-number">1.7.</span> <span class="nav-text">GPDLocalFE</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">end to end 源码解析（GPDNet）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#compute-graph"><span class="nav-number">1.1.</span> <span class="nav-text">compute_graph</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#myroll"><span class="nav-number">1.2.</span> <span class="nav-text">myroll</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#index-points"><span class="nav-number">1.3.</span> <span class="nav-text">index_points</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GConv"><span class="nav-number">1.4.</span> <span class="nav-text">GConv</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ConvLayer"><span class="nav-number">1.5.</span> <span class="nav-text">ConvLayer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-mlp-1d"><span class="nav-number">1.6.</span> <span class="nav-text">get_mlp_1d</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPDLocalFE"><span class="nav-number">1.7.</span> <span class="nav-text">GPDLocalFE</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -483,6 +532,61 @@
 
 
   
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 
