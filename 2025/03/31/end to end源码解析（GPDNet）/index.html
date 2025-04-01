@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="end to end源码解析（GPDNet）compute_graph计算一个输入特征矩阵 h 的图结构中的距离矩阵 123456def compute_graph(h):    sq_norms &#x3D; h * h    sq_norms &#x3D; torch.sum(sq_norms, 2)    D &#x3D; torch.abs(        sq_norms.unsqueeze(2) + sq_norm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="end to end源码解析（GPDNet）">
+<meta property="og:url" content="http://example.com/2025/03/31/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88GPDNet%EF%BC%89/index.html">
+<meta property="og:site_name" content="小乐的日记本">
+<meta property="og:description" content="end to end源码解析（GPDNet）compute_graph计算一个输入特征矩阵 h 的图结构中的距离矩阵 123456def compute_graph(h):    sq_norms &#x3D; h * h    sq_norms &#x3D; torch.sum(sq_norms, 2)    D &#x3D; torch.abs(        sq_norms.unsqueeze(2) + sq_norm">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-03-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-04-01T05:59:52.259Z">
+<meta property="article:author" content="小乐">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/03/31/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88GPDNet%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>end to end源码解析（GPDNet） | 小乐的日记本</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">小乐的日记本</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/03/31/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88GPDNet%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="小乐">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小乐的日记本">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          end to end源码解析（GPDNet）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-03-31 00:00:00" itemprop="dateCreated datePublished" datetime="2025-03-31T00:00:00+08:00">2025-03-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-01 13:59:52" itemprop="dateModified" datetime="2025-04-01T13:59:52+08:00">2025-04-01</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="end-to-end源码解析（GPDNet）"><a href="#end-to-end源码解析（GPDNet）" class="headerlink" title="end to end源码解析（GPDNet）"></a>end to end源码解析（GPDNet）</h1><h2 id="compute-graph"><a href="#compute-graph" class="headerlink" title="compute_graph"></a>compute_graph</h2><p>计算一个输入特征矩阵 h 的图结构中的距离矩阵</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">compute_graph</span>(<span class="params">h</span>):</span><br><span class="line">    sq_norms = h * h</span><br><span class="line">    sq_norms = torch.<span class="built_in">sum</span>(sq_norms, <span class="number">2</span>)</span><br><span class="line">    D = torch.<span class="built_in">abs</span>(</span><br><span class="line">        sq_norms.unsqueeze(<span class="number">2</span>) + sq_norms.unsqueeze(<span class="number">1</span>) - <span class="number">2</span> * torch.matmul(h, h.transpose(<span class="number">1</span>, <span class="number">2</span>)))  <span class="comment"># (B, N, N)</span></span><br><span class="line">    <span class="keyword">return</span> D</span><br></pre></td></tr></table></figure>
+
+<h2 id="myroll"><a href="#myroll" class="headerlink" title="myroll"></a>myroll</h2><p>通过计算一个分割位置，将张量的两部分交换并拼接，从而实现类似循环移位的效果</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">myroll</span>(<span class="params">h, shift=<span class="number">0</span>, axis=<span class="number">2</span></span>):</span><br><span class="line">    h_len = h.size()[<span class="number">2</span>]</span><br><span class="line">    d = <span class="built_in">int</span>(h_len - shift)</span><br><span class="line">    <span class="keyword">return</span> torch.cat((h[:, :, d:], h[:, :, :d]), dim=axis)</span><br></pre></td></tr></table></figure>
+
+<h2 id="index-points"><a href="#index-points" class="headerlink" title="index_points"></a>index_points</h2><p>index_points 函数根据给定的索引 idx 从输入批次 batch 中提取样本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">index_points</span>(<span class="params">batch, idx</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">  Input:</span></span><br><span class="line"><span class="string">      batch: input batch data, [B, N, C]</span></span><br><span class="line"><span class="string">      idx: sample index data, [B, S]</span></span><br><span class="line"><span class="string">  Return:</span></span><br><span class="line"><span class="string">      new_batch: indexed data, [B, S, C] &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    device = batch.device</span><br><span class="line">    B = batch.shape[<span class="number">0</span>]</span><br><span class="line">    view_shape = <span class="built_in">list</span>(idx.shape)</span><br><span class="line">    view_shape[<span class="number">1</span>:] = [<span class="number">1</span>] * (<span class="built_in">len</span>(view_shape) - <span class="number">1</span>)</span><br><span class="line">    repeat_shape = <span class="built_in">list</span>(idx.shape)</span><br><span class="line">    repeat_shape[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">    batch_indices = torch.arange(B, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)</span><br><span class="line">    new_batch = batch[batch_indices, idx, :]</span><br><span class="line">    <span class="keyword">return</span> new_batch</span><br></pre></td></tr></table></figure>
+
+<h2 id="GConv"><a href="#GConv" class="headerlink" title="GConv"></a>GConv</h2><blockquote>
+<p>输入特征 h [B, N, in_feat]<br>│<br>├─ 动态邻居选择 → 邻居特征 x_tilde1, x_tilde2<br>│  │<br>│  └─ 特征差异 labels &#x3D; x_tilde1 - x_tilde2<br>│<br>├─ 特征变换: labels → F.relu(Linear(in_feat→fnet_feat))<br>│<br>├─ 多尺度拼接: labels1 (stride_th1), labels2 (stride_th2)<br>│<br>├─ 低秩权重生成:<br>│   ├─ theta1 [B<em>K, rank, in_feat]<br>│   ├─ theta2 [B</em>K, rank, out_feat]<br>│   └─ thetal [B<em>K, rank, 1] (注意力权重)<br>│<br>├─ 动态卷积计算:<br>│   x &#x3D; theta1 @ x_tilde1 → 加权 → theta2 @ x → 输出 [B</em>K, out_feat]<br>│<br>├─ 邻域聚合: 距离加权求和 → [B, out_feat, N]<br>│<br>输出特征 [B, out_feat, N]</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">GConv</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_feat, fnet_feat, out_feat,</span></span><br><span class="line"><span class="params">                 rank_theta, stride_th1, stride_th2, min_nn</span>):</span><br><span class="line">        <span class="built_in">super</span>(GConv, <span class="variable language_">self</span>).__init__()</span><br><span class="line">        <span class="variable language_">self</span>.in_feat = in_feat</span><br><span class="line">        <span class="variable language_">self</span>.fnet_feat = fnet_feat</span><br><span class="line">        <span class="variable language_">self</span>.out_feat = out_feat</span><br><span class="line">        <span class="variable language_">self</span>.rank_theta = rank_theta</span><br><span class="line">        <span class="variable language_">self</span>.stride_th1 = stride_th1</span><br><span class="line">        <span class="variable language_">self</span>.stride_th2 = stride_th2</span><br><span class="line">        <span class="variable language_">self</span>.min_nn = min_nn</span><br><span class="line"></span><br><span class="line">        <span class="comment"># create_gconv_variables_dn() :</span></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_th0 = torch.nn.Parameter(data=torch.Tensor(in_feat, fnet_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.xavier_normal_(<span class="variable language_">self</span>.W_flayer_th0, gain=<span class="number">1.0</span>)</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_th0 = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, fnet_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_th0)</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_th1 = torch.nn.Parameter(data=torch.Tensor(fnet_feat, <span class="built_in">int</span>(stride_th1) * rank_theta),</span><br><span class="line">                                               requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.normal_(<span class="variable language_">self</span>.W_flayer_th1, mean=<span class="number">0</span>, std=<span class="number">1.0</span> / (np.sqrt(fnet_feat + <span class="number">0.0</span>) * np.sqrt(in_feat + <span class="number">0.0</span>)))</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_th1 = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, rank_theta, in_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_th1)</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_th2 = torch.nn.Parameter(data=torch.Tensor(fnet_feat, <span class="built_in">int</span>(stride_th2) * rank_theta),</span><br><span class="line">                                               requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.normal_(<span class="variable language_">self</span>.W_flayer_th2, mean=<span class="number">0</span>, std=<span class="number">1.0</span> / (np.sqrt(fnet_feat + <span class="number">0.0</span>) * np.sqrt(in_feat + <span class="number">0.0</span>)))</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_th2 = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, rank_theta, out_feat), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_th2)</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.W_flayer_thl = torch.nn.Parameter(data=torch.Tensor(fnet_feat, rank_theta), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.normal_(<span class="variable language_">self</span>.W_flayer_thl, mean=<span class="number">0</span>, std=<span class="number">1.0</span> / np.sqrt(rank_theta + <span class="number">0.0</span>))</span><br><span class="line">        <span class="variable language_">self</span>.b_flayer_thl = torch.nn.Parameter(data=torch.Tensor(<span class="number">1</span>, rank_theta), requires_grad=<span class="literal">True</span>)</span><br><span class="line">        torch.nn.init.zeros_(<span class="variable language_">self</span>.b_flayer_thl)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, h, D</span>):</span><br><span class="line">        B, N, f = h.size()</span><br><span class="line">        <span class="keyword">assert</span> f == <span class="variable language_">self</span>.in_feat</span><br><span class="line">        <span class="keyword">assert</span> D <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># if D is None:</span></span><br><span class="line">        <span class="comment">#     # No previous graph computed..</span></span><br><span class="line">        <span class="comment">#     D = compute_graph(h)</span></span><br><span class="line"></span><br><span class="line">        _, top_idx = torch.topk(-D, k=(<span class="variable language_">self</span>.min_nn + <span class="number">1</span>),</span><br><span class="line">                                dim=-<span class="number">1</span>)  <span class="comment"># (-D is fundamental for following line (i.e. 22)) - [B, N, min_nn + 1]</span></span><br><span class="line">        <span class="comment"># not that &#x27;repeat_interleave&#x27; is not available in torch &lt; 1.1.0</span></span><br><span class="line">        top_idx2 = top_idx[:, :, <span class="number">0</span>].repeat_interleave(<span class="variable language_">self</span>.min_nn, <span class="number">1</span>)  <span class="comment"># expected: [B, N*min_nn]</span></span><br><span class="line">        top_idx = top_idx[:, :, <span class="number">1</span>:].reshape(-<span class="number">1</span>, N * <span class="variable language_">self</span>.min_nn)  <span class="comment"># [B, N, min_nn] -&gt; [B, N*min_nn]</span></span><br><span class="line">        x_tilde1 = index_points(h, top_idx)  <span class="comment"># [B, N*min_nn, in_feat]</span></span><br><span class="line">        x_tilde2 = index_points(h, top_idx2)  <span class="comment"># [B, N*min_nn, in_feat]</span></span><br><span class="line">        labels = x_tilde1 - x_tilde2  <span class="comment"># [B, N*min_nn, in_feat]</span></span><br><span class="line">        x_tilde1 = x_tilde1.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat)  <span class="comment"># [B*N*min_nn, in_feat]</span></span><br><span class="line">        labels = labels.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat)  <span class="comment"># [B*N*min_nn, in_feat]</span></span><br><span class="line">        d_labels = torch.<span class="built_in">sum</span>(labels * labels, dim=<span class="number">1</span>).view(-<span class="number">1</span>, <span class="variable language_">self</span>.min_nn)</span><br><span class="line">        <span class="comment">#相当于是一个欧氏距离</span></span><br><span class="line">        <span class="comment"># print(&quot;labels: &quot;, labels.size())</span></span><br><span class="line">        <span class="comment"># print(&quot;d_labels: &quot;, d_labels.size())</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># FORWARD</span></span><br><span class="line">        labels = F.leaky_relu(torch.matmul(labels, <span class="variable language_">self</span>.W_flayer_th0) + <span class="variable language_">self</span>.b_flayer_th0, negative_slope=<span class="number">0.02</span>)</span><br><span class="line">        labels_exp = labels.unsqueeze(<span class="number">1</span>)  <span class="comment"># (B*K, 1, F)</span></span><br><span class="line">		<span class="comment">#深层拷贝，保证在labels1内容变更时不会影响到labels_exp中存储的数据，保证内存的独立</span></span><br><span class="line">        labels1 = labels_exp + <span class="number">0.0</span>  <span class="comment"># [B*K, 3, F=in_feat]</span></span><br><span class="line">        <span class="keyword">for</span> ss <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="built_in">int</span>(<span class="variable language_">self</span>.in_feat / <span class="variable language_">self</span>.stride_th1)):</span><br><span class="line">            labels1 = torch.cat((labels1, myroll(labels_exp, shift=(ss + <span class="number">1</span>) * <span class="variable language_">self</span>.stride_th1, axis=<span class="number">2</span>)),</span><br><span class="line">                                axis=<span class="number">1</span>)  <span class="comment"># (B*K, dlm1/stride, dlm1)</span></span><br><span class="line"></span><br><span class="line">        labels2 = labels_exp + <span class="number">0.0</span>  <span class="comment"># [B*K, 3, F=in_feat]</span></span><br><span class="line">        <span class="keyword">for</span> ss <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="built_in">int</span>(<span class="variable language_">self</span>.out_feat / <span class="variable language_">self</span>.stride_th2)):</span><br><span class="line">            labels2 = torch.cat((labels2, myroll(labels_exp, shift=(ss + <span class="number">1</span>) * <span class="variable language_">self</span>.stride_th2, axis=<span class="number">2</span>)),</span><br><span class="line">                                axis=<span class="number">1</span>)  <span class="comment"># (B*K, dl/stride, dlm1)</span></span><br><span class="line"></span><br><span class="line">        theta1 = torch.matmul(labels1.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat), <span class="variable language_">self</span>.W_flayer_th1)  <span class="comment"># (B*K*dlm1/stride, R*stride)</span></span><br><span class="line">        theta1 = theta1.view(-<span class="number">1</span>, <span class="variable language_">self</span>.rank_theta, <span class="variable language_">self</span>.in_feat) + <span class="variable language_">self</span>.b_flayer_th1</span><br><span class="line"></span><br><span class="line">        theta2 = torch.matmul(labels2.view(-<span class="number">1</span>, <span class="variable language_">self</span>.in_feat), <span class="variable language_">self</span>.W_flayer_th2)  <span class="comment"># (B*K*dl/stride, R*stride)</span></span><br><span class="line">        theta2 = theta2.view(-<span class="number">1</span>, <span class="variable language_">self</span>.rank_theta, <span class="variable language_">self</span>.out_feat) + <span class="variable language_">self</span>.b_flayer_th2</span><br><span class="line"></span><br><span class="line">        thetal = torch.matmul(labels, <span class="variable language_">self</span>.W_flayer_thl) + <span class="variable language_">self</span>.b_flayer_thl  <span class="comment"># (B*K, R)</span></span><br><span class="line">        thetal = thetal.unsqueeze(<span class="number">2</span>)  <span class="comment"># (B*K, R, 1)</span></span><br><span class="line"></span><br><span class="line">        x = torch.matmul(theta1, x_tilde1.unsqueeze(<span class="number">2</span>))  <span class="comment"># (B*K, R, 1)</span></span><br><span class="line">        x = torch.mul(x, thetal)</span><br><span class="line">        <span class="comment"># print(&quot;theta2: &quot;, theta2.size())</span></span><br><span class="line">        <span class="comment"># print(&quot;theta2 permute: &quot;, theta2.permute(0, 2, 1).size())</span></span><br><span class="line">        <span class="comment"># print(&quot;x: &quot;, x.size())</span></span><br><span class="line">        x = torch.matmul(theta2.permute(<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>), x)[:, :, <span class="number">0</span>]  <span class="comment"># (B*K, dl)</span></span><br><span class="line"></span><br><span class="line">        x = x.view(-<span class="number">1</span>, <span class="variable language_">self</span>.min_nn, <span class="variable language_">self</span>.out_feat)  <span class="comment"># (N, d, dl)</span></span><br><span class="line">        x = torch.mul(x, torch.exp(-torch.div(d_labels, <span class="number">10</span>)).unsqueeze(<span class="number">2</span>))</span><br><span class="line">        <span class="comment"># x = torch.sum(x, 1).reshape(-1, N, self.out_feat)  # [B, N, out_feat]</span></span><br><span class="line">        x = torch.<span class="built_in">sum</span>(x, <span class="number">1</span>).reshape(-<span class="number">1</span>, <span class="variable language_">self</span>.out_feat, N)  <span class="comment"># [B, out_feat, N]</span></span><br><span class="line">        <span class="keyword">return</span> x</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/03/31/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88deco_utils%EF%BC%89/" rel="prev" title="end to end源码解析（deco_utils）">
+      <i class="fa fa-chevron-left"></i> end to end源码解析（deco_utils）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/03/31/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88Deco%EF%BC%89/" rel="next" title="end to end源码解析（Deco）">
+      end to end源码解析（Deco） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#end-to-end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88GPDNet%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">end to end源码解析（GPDNet）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#compute-graph"><span class="nav-number">1.1.</span> <span class="nav-text">compute_graph</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#myroll"><span class="nav-number">1.2.</span> <span class="nav-text">myroll</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#index-points"><span class="nav-number">1.3.</span> <span class="nav-text">index_points</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GConv"><span class="nav-number">1.4.</span> <span class="nav-text">GConv</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">小乐</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2024 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">小乐</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
