@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="end to end 源码解析（utils） gather_by_idxs 详细看GPDNet中的index_points 1234567891011121314151617def gather_by_idxs(source, idx):    &quot;&quot;&quot;&quot;    Input:        source: input points data, [B, N, C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="end to end源码解析（utils）">
+<meta property="og:url" content="http://example.com/2025/04/02/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88utils%EF%BC%89/index.html">
+<meta property="og:site_name" content="小乐的日记本">
+<meta property="og:description" content="end to end 源码解析（utils） gather_by_idxs 详细看GPDNet中的index_points 1234567891011121314151617def gather_by_idxs(source, idx):    &quot;&quot;&quot;&quot;    Input:        source: input points data, [B, N, C">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-04-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-04-02T09:04:10.836Z">
+<meta property="article:author" content="小乐">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/04/02/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88utils%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>end to end源码解析（utils） | 小乐的日记本</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">小乐的日记本</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/02/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88utils%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="小乐">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小乐的日记本">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          end to end源码解析（utils）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-04-02 00:00:00 / 修改时间：17:04:10" itemprop="dateCreated datePublished" datetime="2025-04-02T00:00:00+08:00">2025-04-02</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1>end to end 源码解析（utils）</h1>
+<h2 id="gather-by-idxs">gather_by_idxs</h2>
+<p>详细看GPDNet中的index_points</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">gather_by_idxs</span>(<span class="params">source, idx</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    Input:</span></span><br><span class="line"><span class="string">        source: input points data, [B, N, C]</span></span><br><span class="line"><span class="string">        idx: sample index data, [B, S]</span></span><br><span class="line"><span class="string">    Return:</span></span><br><span class="line"><span class="string">        new_points:, indexed points data, [B, S, C]</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    device = source.device</span><br><span class="line">    B = source.shape[<span class="number">0</span>]</span><br><span class="line">    view_shape = <span class="built_in">list</span>(idx.shape)</span><br><span class="line">    view_shape[<span class="number">1</span>:] = [<span class="number">1</span>] * (<span class="built_in">len</span>(view_shape) - <span class="number">1</span>)</span><br><span class="line">    repeat_shape = <span class="built_in">list</span>(idx.shape)</span><br><span class="line">    repeat_shape[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">    batch_indices = torch.arange(B, dtype=torch.long).to(device).view(view_shape).repeat(repeat_shape)</span><br><span class="line">    new_points = source[batch_indices, idx, :]</span><br><span class="line">    <span class="keyword">return</span> new_points</span><br></pre></td></tr></table></figure>
+<h2 id="set-random-seed">set_random_seed</h2>
+<p>同时设置多个库的随机种子，确保了在深度学习实验中的随机性是可控的，特别是在比较不同模型的性能时</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">set_random_seed</span>(<span class="params">seed</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot; set random seed &quot;&quot;&quot;</span></span><br><span class="line">    random.seed(seed)</span><br><span class="line">    np.random.seed(seed)</span><br><span class="line">    torch.manual_seed(seed)</span><br><span class="line">    torch.cuda.manual_seed_all(seed)</span><br></pre></td></tr></table></figure>
+<h2 id="str2bool">str2bool</h2>
+<p>将字符串转为布尔型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">str2bool</span>(<span class="params">v</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(v, <span class="built_in">bool</span>):</span><br><span class="line">        <span class="keyword">return</span> v</span><br><span class="line">    <span class="keyword">if</span> v.lower() <span class="keyword">in</span> (<span class="string">&#x27;yes&#x27;</span>, <span class="string">&#x27;true&#x27;</span>, <span class="string">&#x27;t&#x27;</span>, <span class="string">&#x27;y&#x27;</span>, <span class="string">&#x27;1&#x27;</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">    <span class="keyword">elif</span> v.lower() <span class="keyword">in</span> (<span class="string">&#x27;no&#x27;</span>, <span class="string">&#x27;false&#x27;</span>, <span class="string">&#x27;f&#x27;</span>, <span class="string">&#x27;n&#x27;</span>, <span class="string">&#x27;0&#x27;</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">raise</span> argparse.ArgumentTypeError(<span class="string">&#x27;Boolean value expected.&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="AverageMeter">AverageMeter</h2>
+<p>这个类用于计算和存储平均值，在深度学习训练过程中常用于跟踪指标（如损失值、准确率等）</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">AverageMeter</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot; Computes and stores the average and current value &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, name, fmt=<span class="string">&#x27;:f&#x27;</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.name = name</span><br><span class="line">        <span class="variable language_">self</span>.fmt = fmt</span><br><span class="line">        <span class="variable language_">self</span>.reset()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">reset</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.val = <span class="number">0</span></span><br><span class="line">        <span class="variable language_">self</span>.avg = <span class="number">0</span></span><br><span class="line">        <span class="variable language_">self</span>.<span class="built_in">sum</span> = <span class="number">0</span></span><br><span class="line">        <span class="variable language_">self</span>.count = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">update</span>(<span class="params">self, val, n=<span class="number">1</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.val = val</span><br><span class="line">        <span class="variable language_">self</span>.<span class="built_in">sum</span> += val * n</span><br><span class="line">        <span class="variable language_">self</span>.count += n</span><br><span class="line">        <span class="variable language_">self</span>.avg = <span class="variable language_">self</span>.<span class="built_in">sum</span> / <span class="variable language_">self</span>.count</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__str__</span>(<span class="params">self</span>):</span><br><span class="line">        fmtstr = <span class="string">&#x27;&#123;name&#125; &#123;val&#x27;</span> + <span class="variable language_">self</span>.fmt + <span class="string">&#x27;&#125; (&#123;avg&#x27;</span> + <span class="variable language_">self</span>.fmt + <span class="string">&#x27;&#125;)&#x27;</span></span><br><span class="line">        <span class="keyword">return</span> fmtstr.<span class="built_in">format</span>(**<span class="variable language_">self</span>.__dict__)</span><br></pre></td></tr></table></figure>
+<h2 id="check-dataparallel">check_dataparallel</h2>
+<p>这个函数通常用于模型加载时，判断是否需要去除DataParallel添加的’module.'前缀。==单gpu训练不需要这段代码==，当模型在多GPU上训练时使用DataParallel包装，保存的模型参数会自动添加这个前缀。但在单GPU或CPU上加载时，需要去除这个前缀才能正确加载模型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">check_dataparallel</span>(<span class="params">state_dict</span>):</span><br><span class="line">    res = <span class="literal">False</span></span><br><span class="line">    <span class="keyword">for</span> k, _ <span class="keyword">in</span> state_dict.items():</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">str</span>(k).startswith(<span class="string">&#x27;module&#x27;</span>):</span><br><span class="line">            res = <span class="literal">True</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">return</span> res</span><br></pre></td></tr></table></figure>
+<h2 id="sanitize-model-dict">sanitize_model_dict</h2>
+<p>移除保存模型的多级前缀</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">sanitize_model_dict</span>(<span class="params">state_dict, to_remove_str=<span class="string">&#x27;module&#x27;</span></span>):</span><br><span class="line">    new_state_dict = OrderedDict()</span><br><span class="line">    remove_len = <span class="built_in">len</span>(to_remove_str) + <span class="number">1</span></span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> state_dict.items():</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">str</span>(k).startswith(to_remove_str):</span><br><span class="line">            name = k[remove_len:]</span><br><span class="line">            new_state_dict[name] = v</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            new_state_dict[k] = v</span><br><span class="line">    <span class="keyword">return</span> new_state_dict</span><br></pre></td></tr></table></figure>
+<h2 id="count-params">count_params</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">count_params</span>(<span class="params">model</span>):</span><br><span class="line">    tot_params = <span class="built_in">sum</span>(p.numel() <span class="keyword">for</span> p <span class="keyword">in</span> model.parameters())<span class="comment">#总参数</span></span><br><span class="line">    trainable_params = <span class="built_in">sum</span>(p.numel() <span class="keyword">for</span> p <span class="keyword">in</span> model.parameters() <span class="keyword">if</span> p.requires_grad)<span class="comment">#可训练参数</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Num params: <span class="subst">&#123;tot_params&#125;</span>, Trainable: <span class="subst">&#123;trainable_params&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> tot_params, trainable_params</span><br></pre></td></tr></table></figure>
+<h2 id="plot-grad-flow">plot_grad_flow</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">plot_grad_flow</span>(<span class="params">named_parameters</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    可视化神经网络梯度流动情况</span></span><br><span class="line"><span class="string">    Credits to RoshanRane: https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/8</span></span><br><span class="line"><span class="string">    :param named_parameters:</span></span><br><span class="line"><span class="string">    :return:</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    ave_grads = []</span><br><span class="line">    layers = []</span><br><span class="line">    <span class="comment"># 遍历所有命名参数</span></span><br><span class="line">    <span class="keyword">for</span> n, p <span class="keyword">in</span> named_parameters:</span><br><span class="line">        <span class="comment"># 只处理需要梯度且不是偏置的参数</span></span><br><span class="line">        <span class="keyword">if</span> p.requires_grad <span class="keyword">and</span> (<span class="string">&quot;bias&quot;</span> <span class="keyword">not</span> <span class="keyword">in</span> n):</span><br><span class="line">            <span class="comment"># 检查梯度是否存在</span></span><br><span class="line">            <span class="keyword">if</span> p.grad <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                warnings.warn(<span class="string">f&#x27;Grad is none for layer <span class="subst">&#123;n&#125;</span>.&#x27;</span>, RuntimeWarning)</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">                </span><br><span class="line">            <span class="comment"># 记录层名(截取前15个字符)和平均梯度绝对值</span></span><br><span class="line">            layers.append(n[:<span class="number">15</span>])</span><br><span class="line">            ave_grads.append(p.grad.cpu().<span class="built_in">abs</span>().mean())</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 绘制梯度曲线</span></span><br><span class="line">    plt.plot(ave_grads, alpha=<span class="number">0.3</span>, color=<span class="string">&quot;b&quot;</span>)</span><br><span class="line">    <span class="comment"># 添加零基准线</span></span><br><span class="line">    plt.hlines(<span class="number">0</span>, <span class="number">0</span>, <span class="built_in">len</span>(ave_grads)+<span class="number">1</span>, linewidth=<span class="number">1</span>, color=<span class="string">&quot;k&quot;</span>)</span><br><span class="line">    <span class="comment"># 设置x轴刻度(使用层名)</span></span><br><span class="line">    plt.xticks(<span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(ave_grads), <span class="number">1</span>), layers, rotation=<span class="string">&quot;vertical&quot;</span>)</span><br><span class="line">    <span class="comment"># 设置坐标轴范围</span></span><br><span class="line">    plt.xlim(xmin=<span class="number">0</span>, xmax=<span class="built_in">len</span>(ave_grads))</span><br><span class="line">    <span class="comment"># 添加标签</span></span><br><span class="line">    plt.xlabel(<span class="string">&quot;Layers&quot;</span>)</span><br><span class="line">    plt.ylabel(<span class="string">&quot;Average gradient&quot;</span>)</span><br><span class="line">    plt.title(<span class="string">&quot;Gradient flow&quot;</span>)</span><br><span class="line">    <span class="comment"># 添加网格并调整布局</span></span><br><span class="line">    plt.grid(<span class="literal">True</span>)</span><br><span class="line">    plt.tight_layout()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 返回图形对象</span></span><br><span class="line">    <span class="keyword">return</span> plt.gcf()</span><br></pre></td></tr></table></figure>
+<h2 id="IOStream">IOStream</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">IOStream</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    通用文本日志记录器</span></span><br><span class="line"><span class="string">    功能：同时输出到控制台(带颜色)和日志文件</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, path</span>):</span><br><span class="line">        <span class="comment"># 以追加模式打开日志文件</span></span><br><span class="line">        <span class="variable language_">self</span>.f = <span class="built_in">open</span>(path, <span class="string">&#x27;a&#x27;</span>)</span><br><span class="line">        <span class="comment"># 定义颜色lambda函数</span></span><br><span class="line">        <span class="variable language_">self</span>.blue = <span class="keyword">lambda</span> x: <span class="string">&#x27;\033[94m&#x27;</span> + x + <span class="string">&#x27;\033[0m&#x27;</span>  <span class="comment"># 蓝色</span></span><br><span class="line">        <span class="variable language_">self</span>.red = <span class="keyword">lambda</span> x: <span class="string">&#x27;\033[31m&#x27;</span> + x + <span class="string">&#x27;\033[0m&#x27;</span>   <span class="comment"># 红色</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">cprint</span>(<span class="params">self, text, color=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        彩色打印并记录到文件</span></span><br><span class="line"><span class="string">        :param text: 要输出的文本</span></span><br><span class="line"><span class="string">        :param color: 颜色选项 (&#x27;b&#x27;/&#x27;blue&#x27; 或 &#x27;r&#x27;/&#x27;red&#x27;)</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> color <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span> <span class="keyword">and</span> (color == <span class="string">&#x27;b&#x27;</span> <span class="keyword">or</span> color == <span class="string">&#x27;blue&#x27;</span>):</span><br><span class="line">            <span class="built_in">print</span>(<span class="variable language_">self</span>.blue(text))  <span class="comment"># 蓝色输出</span></span><br><span class="line">        <span class="keyword">elif</span> color <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span> <span class="keyword">and</span> (color == <span class="string">&#x27;r&#x27;</span> <span class="keyword">or</span> color == <span class="string">&#x27;red&#x27;</span>):</span><br><span class="line">            <span class="built_in">print</span>(<span class="variable language_">self</span>.red(text))   <span class="comment"># 红色输出</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="built_in">print</span>(text)             <span class="comment"># 普通输出</span></span><br><span class="line">            </span><br><span class="line">        <span class="comment"># 同时写入文件(无颜色)</span></span><br><span class="line">        <span class="variable language_">self</span>.f.write(text + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">        <span class="variable language_">self</span>.f.flush()  <span class="comment"># 立即刷新缓冲区</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">fprint</span>(<span class="params">self, text</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        仅记录到文件(不打印到控制台)</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="variable language_">self</span>.f.write(text + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">        <span class="variable language_">self</span>.f.flush()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">close</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        关闭日志文件</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="variable language_">self</span>.f.close()</span><br></pre></td></tr></table></figure>
+<h2 id="safe-make-dirs">safe_make_dirs</h2>
+<p>安全创建目录</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">safe_make_dirs</span>(<span class="params">dirs</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(dirs, <span class="built_in">list</span>):</span><br><span class="line">        dirs = [dirs]</span><br><span class="line">    <span class="keyword">for</span> currdir <span class="keyword">in</span> dirs:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(currdir):<span class="comment">#如果不存在，判断为true，进入if语句</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;Creating directory: <span class="subst">&#123;currdir&#125;</span>&quot;</span>)</span><br><span class="line">            os.makedirs(currdir)</span><br></pre></td></tr></table></figure>
+<h2 id="打印信息设置">打印信息设置</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">bcolors</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;ANSI 颜色代码定义&quot;&quot;&quot;</span></span><br><span class="line">    HEADER = <span class="string">&#x27;\033[95m&#x27;</span>    <span class="comment"># 紫色</span></span><br><span class="line">    OKBLUE = <span class="string">&#x27;\033[94m&#x27;</span>    <span class="comment"># 蓝色</span></span><br><span class="line">    OKCYAN = <span class="string">&#x27;\033[96m&#x27;</span>    <span class="comment"># 青色</span></span><br><span class="line">    OKGREEN = <span class="string">&#x27;\033[92m&#x27;</span>   <span class="comment"># 绿色</span></span><br><span class="line">    WARNING = <span class="string">&#x27;\033[93m&#x27;</span>   <span class="comment"># 黄色(警告)</span></span><br><span class="line">    FAIL = <span class="string">&#x27;\033[91m&#x27;</span>      <span class="comment"># 红色(错误)</span></span><br><span class="line">    ENDC = <span class="string">&#x27;\033[0m&#x27;</span>       <span class="comment"># 重置颜色</span></span><br><span class="line">    BOLD = <span class="string">&#x27;\033[1m&#x27;</span>       <span class="comment"># 加粗</span></span><br><span class="line">    UNDERLINE = <span class="string">&#x27;\033[4m&#x27;</span>  <span class="comment"># 下划线</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">print_bold</span>(<span class="params">pstring</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;加粗打印文本&quot;&quot;&quot;</span></span><br><span class="line">    <span class="built_in">print</span>(bcolors.BOLD + pstring + bcolors.ENDC)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">print_warn</span>(<span class="params">pstring</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;黄色警告打印&quot;&quot;&quot;</span></span><br><span class="line">    <span class="built_in">print</span>(bcolors.WARNING + pstring + bcolors.ENDC)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">print_fail</span>(<span class="params">pstring</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;红色错误打印&quot;&quot;&quot;</span> </span><br><span class="line">    <span class="built_in">print</span>(bcolors.FAIL + pstring + bcolors.ENDC)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">print_ok</span>(<span class="params">pstring</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;蓝色成功打印&quot;&quot;&quot;</span></span><br><span class="line">    <span class="built_in">print</span>(bcolors.OKBLUE + pstring + bcolors.ENDC)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/04/02/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88ContactSampleNet%EF%BC%89/" rel="prev" title="end to end源码解析（ContactSampleNet）">
+      <i class="fa fa-chevron-left"></i> end to end源码解析（ContactSampleNet）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">end to end 源码解析（utils）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#gather-by-idxs"><span class="nav-number">1.1.</span> <span class="nav-text">gather_by_idxs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#set-random-seed"><span class="nav-number">1.2.</span> <span class="nav-text">set_random_seed</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#str2bool"><span class="nav-number">1.3.</span> <span class="nav-text">str2bool</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AverageMeter"><span class="nav-number">1.4.</span> <span class="nav-text">AverageMeter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#check-dataparallel"><span class="nav-number">1.5.</span> <span class="nav-text">check_dataparallel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sanitize-model-dict"><span class="nav-number">1.6.</span> <span class="nav-text">sanitize_model_dict</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#count-params"><span class="nav-number">1.7.</span> <span class="nav-text">count_params</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#plot-grad-flow"><span class="nav-number">1.8.</span> <span class="nav-text">plot_grad_flow</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IOStream"><span class="nav-number">1.9.</span> <span class="nav-text">IOStream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#safe-make-dirs"><span class="nav-number">1.10.</span> <span class="nav-text">safe_make_dirs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%8D%B0%E4%BF%A1%E6%81%AF%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.11.</span> <span class="nav-text">打印信息设置</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">小乐</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2024 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">小乐</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
