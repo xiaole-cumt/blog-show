@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="end to end源码解析（sputils) _calc_distances 12def _calc_distances(p0, points):    return ((p0 - points) ** 2).sum(axis&#x3D;1)  # 计算点p0与点集中各点的欧氏距离平方 _fps_from_given_pc 给定点集到当前点集的最小距离中选择最小距离最远的点（当前点集中的），也就是到给定点">
+<meta property="og:type" content="article">
+<meta property="og:title" content="end to end源码解析（sputils)">
+<meta property="og:url" content="http://example.com/2025/04/02/end-to-end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88sputils%EF%BC%89/index.html">
+<meta property="og:site_name" content="小乐的日记本">
+<meta property="og:description" content="end to end源码解析（sputils) _calc_distances 12def _calc_distances(p0, points):    return ((p0 - points) ** 2).sum(axis&#x3D;1)  # 计算点p0与点集中各点的欧氏距离平方 _fps_from_given_pc 给定点集到当前点集的最小距离中选择最小距离最远的点（当前点集中的），也就是到给定点">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-04-02T09:24:36.000Z">
+<meta property="article:modified_time" content="2025-04-03T04:07:46.037Z">
+<meta property="article:author" content="小乐">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/04/02/end-to-end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88sputils%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>end to end源码解析（sputils) | 小乐的日记本</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">小乐的日记本</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/02/end-to-end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88sputils%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="小乐">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小乐的日记本">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          end to end源码解析（sputils)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-04-02 17:24:36" itemprop="dateCreated datePublished" datetime="2025-04-02T17:24:36+08:00">2025-04-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-03 12:07:46" itemprop="dateModified" datetime="2025-04-03T12:07:46+08:00">2025-04-03</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1>end to end源码解析（sputils)</h1>
+<h2 id="calc-distances">_calc_distances</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_calc_distances</span>(<span class="params">p0, points</span>):</span><br><span class="line">    <span class="keyword">return</span> ((p0 - points) ** <span class="number">2</span>).<span class="built_in">sum</span>(axis=<span class="number">1</span>)  <span class="comment"># 计算点p0与点集中各点的欧氏距离平方</span></span><br></pre></td></tr></table></figure>
+<h2 id="fps-from-given-pc">_fps_from_given_pc</h2>
+<p>给定点集到当前点集的最小距离中选择最小距离最远的点（当前点集中的），也就是到给定点集中最大最小距离的点，放入给定点集中再次最远点采样，选出第二大最小距离的点放入给定点集中。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_fps_from_given_pc</span>(<span class="params">pts, k, given_pc</span>):</span><br><span class="line">    <span class="comment"># 初始化输出数组: 形状为(k,3)的全零数组</span></span><br><span class="line">    farthest_pts = np.zeros((k, <span class="number">3</span>))  </span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算给定点数量: given_pc总元素数除以3(每个点xyz坐标)</span></span><br><span class="line">    t = np.size(given_pc) // <span class="number">3</span>  </span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 将前t个点设置为given_pc的值</span></span><br><span class="line">    farthest_pts[<span class="number">0</span>:t] = given_pc  </span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算第一个给定点到所有输入点的距离平方和</span></span><br><span class="line">    distances = _calc_distances(farthest_pts[<span class="number">0</span>], pts)  </span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 更新距离: 保留每个点到已选点集的最小距离</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, t):</span><br><span class="line">        distances = np.minimum(distances, _calc_distances(farthest_pts[i], pts))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 从第t个点开始进行最远点采样</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(t, k):</span><br><span class="line">        <span class="comment"># 选择当前距离最大的点加入结果集</span></span><br><span class="line">        farthest_pts[i] = pts[np.argmax(distances)]  </span><br><span class="line">        <span class="comment"># 更新所有点到新加入点的距离</span></span><br><span class="line">        distances = np.minimum(distances, _calc_distances(farthest_pts[i], pts))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 返回最终采样结果: 包含初始given_pc和新增的(k-t)个最远点</span></span><br><span class="line">    <span class="keyword">return</span> farthest_pts</span><br></pre></td></tr></table></figure>
+<h2 id="unique">_unique</h2>
+<p>去除重复元素</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_unique</span>(<span class="params">arr</span>):</span><br><span class="line">    _, idx = np.unique(arr, return_index=<span class="literal">True</span>)  <span class="comment"># 获取唯一值和索引</span></span><br><span class="line">    <span class="keyword">return</span> arr[np.sort(idx)]  <span class="comment"># 返回排序后的唯一值</span></span><br></pre></td></tr></table></figure>
+<h2 id="nn-matching">nn_matching</h2>
+<p>进行点云的匹配和采样，共有3种模式：</p>
+<table>
+<thead>
+<tr>
+<th>FPS模式（complete_fps=True）</th>
+<th>先去除重复索引;用最远点采样算法补充到k个点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>权重模式（counts不为None）</td>
+<td>按照counts权重值降序排序选择点</td>
+</tr>
+<tr>
+<td>直接模式</td>
+<td>直接使用给定索引选择点</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">nn_matching</span>(<span class="params">full_pc, idx, k, complete_fps=<span class="literal">True</span>, counts=<span class="literal">None</span></span>):</span><br><span class="line">    batch_size = np.size(full_pc, <span class="number">0</span>)  <span class="comment"># 获取批次大小</span></span><br><span class="line">    out_pc = np.zeros((full_pc.shape[<span class="number">0</span>], k, <span class="number">3</span>))  <span class="comment"># 初始化输出点云</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> ii <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, batch_size):</span><br><span class="line">        best_idx = idx[ii]  <span class="comment"># 当前批次的索引</span></span><br><span class="line">        <span class="keyword">if</span> complete_fps:  <span class="comment"># 如果需要完整FPS</span></span><br><span class="line">            best_idx = _unique(best_idx)  <span class="comment"># 去重，防止FPS采样输出重复</span></span><br><span class="line">            out_pc[ii] = _fps_from_given_pc(full_pc[ii], k, full_pc[ii][best_idx])  <span class="comment"># 执行FPS</span></span><br><span class="line">        <span class="keyword">elif</span> counts <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:  <span class="comment"># 如果有计数信息</span></span><br><span class="line">            best_idx = best_idx[np.argsort(-counts)]  <span class="comment"># 按计数排序</span></span><br><span class="line">            out_pc[ii] = full_pc[ii][best_idx]  <span class="comment"># 直接采样</span></span><br><span class="line">        <span class="keyword">else</span>:  <span class="comment"># 默认情况</span></span><br><span class="line">            out_pc[ii] = full_pc[ii][best_idx]  <span class="comment"># 直接采样</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> out_pc[:, <span class="number">0</span>:k, :]  <span class="comment"># 返回前k个点</span></span><br></pre></td></tr></table></figure>
+<h2 id="get-parser">get_parser</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">get_parser</span>():</span><br><span class="line">    parser = argparse.ArgumentParser(<span class="string">&quot;SampleNet: Differentiable Point Cloud Sampling&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 添加各种参数选项</span></span><br><span class="line">    parser.add_argument(<span class="string">&quot;--skip-projection&quot;</span>, action=<span class="string">&quot;store_true&quot;</span>, <span class="built_in">help</span>=<span class="string">&quot;训练时不投影点&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-in&quot;</span>, <span class="string">&quot;--num-in-points&quot;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">1024</span>, <span class="built_in">help</span>=<span class="string">&quot;输入点数&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-out&quot;</span>, <span class="string">&quot;--num-out-points&quot;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">64</span>, <span class="built_in">help</span>=<span class="string">&quot;输出点数&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--bottleneck-size&quot;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">128</span>, <span class="built_in">help</span>=<span class="string">&quot;瓶颈层大小&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--alpha&quot;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">0.01</span>, <span class="built_in">help</span>=<span class="string">&quot;简化正则化权重&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--gamma&quot;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">1</span>, <span class="built_in">help</span>=<span class="string">&quot;Lb常数正则化权重&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--delta&quot;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">0</span>, <span class="built_in">help</span>=<span class="string">&quot;Lb线性正则化权重&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-gs&quot;</span>, <span class="string">&quot;--projection-group-size&quot;</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, default=<span class="number">8</span>, <span class="built_in">help</span>=<span class="string">&quot;软投影邻域大小&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;--lmbda&quot;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">0.01</span>, <span class="built_in">help</span>=<span class="string">&quot;投影正则化权重&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> parser</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/04/02/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88utils%EF%BC%89/" rel="prev" title="end to end源码解析（utils）">
+      <i class="fa fa-chevron-left"></i> end to end源码解析（utils）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/04/03/end%20to%20end%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%88soft_projection)/" rel="next" title="end to end源码解析（soft_projection)">
+      end to end源码解析（soft_projection) <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">end to end源码解析（sputils)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#calc-distances"><span class="nav-number">1.1.</span> <span class="nav-text">_calc_distances</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fps-from-given-pc"><span class="nav-number">1.2.</span> <span class="nav-text">_fps_from_given_pc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#unique"><span class="nav-number">1.3.</span> <span class="nav-text">_unique</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nn-matching"><span class="nav-number">1.4.</span> <span class="nav-text">nn_matching</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-parser"><span class="nav-number">1.5.</span> <span class="nav-text">get_parser</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">小乐</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2024 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">小乐</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
