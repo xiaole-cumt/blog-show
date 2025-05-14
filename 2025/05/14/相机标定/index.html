@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="相机标定 坐标系变换 世界到相机 世界到相机坐标系，所代表的是外参矩阵（R | t），外参矩阵描述了相机在世界坐标系中的位置和姿态，由旋转矩阵$R$和平移向量$t$组成： $$ [R|t] &#x3D; \begin{bmatrix} r_{11} &amp; r_{12} &amp; r_{13} &amp; t_1 \ r_{21} &amp; r_{22} &amp; r_{23} &amp; t_2">
+<meta property="og:type" content="article">
+<meta property="og:title" content="相机标定">
+<meta property="og:url" content="http://example.com/2025/05/14/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/index.html">
+<meta property="og:site_name" content="小乐的日记本">
+<meta property="og:description" content="相机标定 坐标系变换 世界到相机 世界到相机坐标系，所代表的是外参矩阵（R | t），外参矩阵描述了相机在世界坐标系中的位置和姿态，由旋转矩阵$R$和平移向量$t$组成： $$ [R|t] &#x3D; \begin{bmatrix} r_{11} &amp; r_{12} &amp; r_{13} &amp; t_1 \ r_{21} &amp; r_{22} &amp; r_{23} &amp; t_2">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514120819646.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-785962648b26ed367b29d7d60f95c425_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-e8799286ec7edb97abc7f6f293e1f461_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-4775eaeff150c8934976e67dca575bd2_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-29d4c9a3bf33c8d4340e33bb40e72dd9_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514140458181.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-0142e58773721ada848f281c0d7674a0_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/%E5%B1%80%E9%83%A8%E6%88%AA%E5%8F%96_20250514_145821.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/76bbf59e0e7e582b491a0b79d0d01f10.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-03a212719e9084f0ab4c6aabdf68e48c_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-c1a8194a2b253598f7b049cddb7235f7_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514152421835.png">
+<meta property="article:published_time" content="2025-05-14T05:42:35.547Z">
+<meta property="article:modified_time" content="2025-05-14T07:51:23.198Z">
+<meta property="article:author" content="小乐">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514120819646.png">
+
+<link rel="canonical" href="http://example.com/2025/05/14/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>相机标定 | 小乐的日记本</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">小乐的日记本</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/05/14/%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="小乐">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小乐的日记本">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          相机标定
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-05-14 13:42:35 / 修改时间：15:51:23" itemprop="dateCreated datePublished" datetime="2025-05-14T13:42:35+08:00">2025-05-14</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1>相机标定</h1>
+<h2 id="坐标系变换">坐标系变换</h2>
+<h3 id="世界到相机">世界到相机</h3>
+<p>世界到相机坐标系，所代表的是外参矩阵（R | t），外参矩阵描述了相机在世界坐标系中的位置和姿态，由旋转矩阵$R$和平移向量$t$组成：</p>
+<p>$$<br>
+[R|t] = \begin{bmatrix}<br>
+r_{11} &amp; r_{12} &amp; r_{13} &amp; t_1 \<br>
+r_{21} &amp; r_{22} &amp; r_{23} &amp; t_2 \<br>
+r_{31} &amp; r_{32} &amp; r_{33} &amp; t_3<br>
+\end{bmatrix}<br>
+$$</p>
+<p>$$<br>
+\begin{bmatrix}X_C\Y_C\Z_C\1\end{bmatrix}=\begin{bmatrix}R&amp;t\0^T&amp;1\end{bmatrix}\begin{bmatrix}X\Y\Z\1\end{bmatrix}<br>
+$$</p>
+<h3 id="相机到图像">相机到图像</h3>
+<p>相机到图像是一个相似三角投影</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514120819646.png" alt="image-20250514120819646"><br>
+$$<br>
+Z_C\begin{bmatrix}x\y\1\end{bmatrix}=\begin{bmatrix}f&amp;0&amp;0&amp;0\0&amp;f&amp;0&amp;0\0&amp;0&amp;1&amp;0\end{bmatrix}\begin{bmatrix}X_C\Y_C\Z_C\1\end{bmatrix}<br>
+$$</p>
+<h3 id="图像到像素">图像到像素</h3>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-785962648b26ed367b29d7d60f95c425_r.jpg" alt="img"></p>
+<p>图像坐标系原点在图片中心，像素在左上角，并且以（v，u）形式表示。$d_x$和$d_y$代表<em>X</em>,<em>Y</em>方向上的一个像素在相机感光板上的物理长度（即一个像素在感光板上是多少毫米）<br>
+$$<br>
+\begin{bmatrix}u\v\1\end{bmatrix}=\begin{bmatrix}\frac{1}{dx}&amp;0&amp;u_0\0&amp;\frac{1}{dy}&amp;v_0\0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}x\y\1\end{bmatrix}<br>
+$$</p>
+<p>其中$u_0$和$v_0$是在像素坐标系下图像坐标系原点坐标。</p>
+<p>如果加入误差因子，误差是由于像素坐标系的x轴和y轴之间的夹角并非一定是90°，而这个夹角将会对我们所求得的像素坐标系中的坐标产生影响，因此需要对内参矩阵进行一定量的修正。 我们把像素坐标系的x轴和y轴之间的夹角设定为θ。变换矩阵为<br>
+$$<br>
+\begin{pmatrix}\frac{1}{dX}&amp;-\frac{\cot\theta}{dX}&amp;u_0\0&amp;\frac{1}{dY\sin\theta}&amp;v_0\0&amp;0&amp;1\end{pmatrix}<br>
+$$<br>
+所以，在不考虑误差的情况下，整体变换矩阵为</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-e8799286ec7edb97abc7f6f293e1f461_r.jpg" alt="img"></p>
+<p>如果考虑误差，则相机内参变为<br>
+$$<br>
+\begin{pmatrix}\frac{f}{dX}&amp;-\frac{f\cot\theta}{dX}&amp;u_0&amp;0\0&amp;\frac{f}{dY\sin\theta}&amp;v_0&amp;0\0&amp;0&amp;1&amp;0\end{pmatrix}<br>
+$$</p>
+<h2 id="张正友标定法-单目">张正友标定法(单目)</h2>
+<h3 id="单应性矩阵">单应性矩阵</h3>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-4775eaeff150c8934976e67dca575bd2_r.jpg" alt="img"></p>
+<p>他的一个作用就是将我们拍摄到的各种角度的标定板照片都转换成右侧这种形式。</p>
+<p>我们知道针孔相机模型将 3D 空间中的点映射到图像平面上。假设我们的场景是一个平面并且位于 (X, Y, 0)。然后我们可以像下面一样更新相机矩阵。</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-29d4c9a3bf33c8d4340e33bb40e72dd9_r.jpg" alt="img"></p>
+<p>所以，之前的坐标系变换矩阵可以表示为<br>
+$$<br>
+Z\begin{pmatrix}u\v\1\end{pmatrix}=\begin{pmatrix}\frac{f}{dX}&amp;-\frac{f\cot\theta}{dX}&amp;u_0\0&amp;\frac{f}{dY\sin\theta}&amp;v_0\0&amp;0&amp;1\end{pmatrix}(R1\quad R2\quad T)\begin{pmatrix}X\Y\1\end{pmatrix}=A(R1\quad R2\quad T)\begin{pmatrix}X\Y\1\end{pmatrix}=H\begin{pmatrix}X\Y\1\end{pmatrix}<br>
+$$<br>
+消去尺度因子z<br>
+$$<br>
+\begin{gathered}<br>
+u=\frac{H_{11}X+H_{12}Y+H_{13}}{H_{31}X+H_{32}Y+H_{33}} \<br>
+v=\frac{H_{21}X+H_{22}Y+H_{23}}{H_{31}X+H_{32}Y+H_{33}}<br>
+\end{gathered}<br>
+$$<br>
+由这里的 H是齐次矩阵，有8个独立未知元素。每一个标定板角点可以提供两个约束方程。因此，当一张图片上的标定板角点数量等于4时，即可求得该图片对应的矩阵 H。当一张图片上的标定板角点数量大于4时，利用SVD求解最小二乘法最佳的矩阵H。最后形如</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514140458181.png" alt="image-20250514140458181"></p>
+<h3 id="内参矩阵">内参矩阵</h3>
+<p>我们已知了矩阵 $H=A(R1\quad R2\quad T)$，利用R1,R2作为旋转矩阵 R 的两列，存在单位正交的关系，即<br>
+$$<br>
+R1^TR2=0\<br>
+R1^TR1=R2^TR2=1<br>
+$$<br>
+代入可得：<br>
+$$<br>
+H1^TA^{-T}A^{-1}H2=0\H1^TA^{-T}A^{-1}H1=H2^TA^{-T}A^{-1}H2=1<br>
+$$<br>
+上述两个约束方程中均存在矩阵 $A^{-T}A^{-1}$ 。因此，我们记$A^{-T}A^{-1}=B$​ ，则 <em>B</em>为对称阵。我们先求解出矩阵 <em>B</em> ，通过矩阵 <em>B</em> 再求解相机的内参矩阵 <em>A</em> 。</p>
+<p>同时，为了简便，我们记相机内参矩阵 A 为：<br>
+$$<br>
+A=\begin{pmatrix}\frac{f}{dX}&amp;-\frac{f\cot\theta}{dX}&amp;u_0&amp;0\0&amp;\frac{f}{dY\sin\theta}&amp;v_0&amp;0\0&amp;0&amp;1&amp;0\end{pmatrix}=\begin{bmatrix}\alpha&amp;\gamma&amp;u_0\0&amp;\beta&amp;v_0\0&amp;0&amp;1\end{bmatrix}<br>
+$$<br>
+则用矩阵 A表示矩阵 B 得：<br>
+$$<br>
+B=A^{-T}A^{-1}=\begin{bmatrix}\frac{1}{\alpha^2}&amp;-\frac{\gamma}{\alpha^2\beta}&amp;\frac{\gamma v_0-\beta u_0}{\alpha^2\beta}\-\frac{\gamma}{\alpha^2\beta}&amp;\frac{1}{\beta^2}+\frac{\gamma^2}{\alpha^2\beta^2}&amp;\frac{\gamma(\beta u_0-\gamma v_0)}{\alpha^2\beta^2}-\frac{v_0}{\beta^2}\\frac{\gamma v_0-\beta u_0}{\alpha^2\beta}&amp;\frac{\gamma(\beta u_0-\gamma v_0)}{\alpha^2\beta^2}-\frac{v_0}{\beta^2}&amp;\frac{(\beta u_0-\gamma v_0)^2}{\alpha^2\beta^2}+\frac{v_0^2}{\beta^2}+1\end{bmatrix}=\begin{bmatrix}B_{11}&amp;B_{12}&amp;B_{13}\B_{12}&amp;B_{22}&amp;B_{23}\B_{13}&amp;B_{23}&amp;B_{33}\end{bmatrix}<br>
+$$<br>
+注意：由于B为对称阵，上式出现了两次 B12,B13,B23 。<br>
+$$<br>
+\begin{aligned}&amp;H_{i}^{T}BH_{j}=[H_{1i}\quad H_{2i}\quad H_{3i}]\begin{bmatrix}B_{11}&amp;B_{12}&amp;B_{13}\B_{12}&amp;B_{22}&amp;B_{32}\B_{31}&amp;B_{32}&amp;B_{33}\end{bmatrix}\begin{bmatrix}H_{1j}\H_{2j}\H_{3j}\end{bmatrix}=[H_{1i}H_{1j}\quad H_{1i}H_{2j}+H_{2i}H_{1j}\quad H_{2i}H_{2j}\quad H_{1i}H_{3j}+H_{3i}H_{1j}\quad H_{2i}H_{3j}\quad H_{3i}H_{3j}]\begin{bmatrix}B_{11}\B_{12}\B_{22}\B_{13}\B_{23}\B_{33}\end{bmatrix}\end{aligned}<br>
+$$<br>
+<img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-0142e58773721ada848f281c0d7674a0_r.jpg" alt="img"><br>
+$$<br>
+\begin{bmatrix}v_{12}^T\v_{11}^T-v_{22}^T\end{bmatrix}b=vb=0<br>
+$$<br>
+此时，我们只要求解出向量b ，即可得到矩阵B 。每张标定板图片可以提供一个 vb=0 的约束关系，该约束关系含有两个约束方程。但是，向量 b 有6个未知元素。因此，单张图片提供的两个约束方程是不足以解出来向量 b。因此，我们只要取3张标定板照片，得到3个vb=0 的约束关系，即6个方程，即可求解向量 b。再有B求出A中参数，得到内参矩阵A<br>
+$$<br>
+v_0=\frac{B_{12}B_{13}-B_{11}B_{23}}{B_{11}B_{22}-B_{12}^2}\<br>
+\alpha=\sqrt{\frac{1}{B_{11}}}\<br>
+\begin{aligned}\beta=&amp;\sqrt{\frac{B_{11}}{B_{11}B_{22}-B_{12}^{2}}}\<br>
+\gamma=&amp;-B_{12}\alpha^{2}\beta\<br>
+u_{0}=&amp;\frac{\gamma v_0}{\beta}-B_{13}\alpha^2\end{aligned}<br>
+$$</p>
+<h3 id="外参矩阵">外参矩阵</h3>
+<p>对于同一个相机，相机的内参矩阵取决于相机的内部参数，无论标定板和相机的位置关系是怎么样的，相机的内参矩阵不变。但是，外参矩阵反映的是标定板和相机的位置关系。对于不同的图片，标定板和相机的位置关系已经改变，此时每一张图片对应的外参矩阵都是不同的。</p>
+<p>在之前$H=A(R1\quad R2\quad T)$中，H和A现都可知，则可以求出$(R1\quad R2\quad T)$，但是，由于张正友标定板将世界坐标系的原点选取在棋盘格上，则棋盘格上任一点的物理坐标 W=0，将旋转矩阵的R的第三列 R3消掉，因此， R3在坐标转化中并没有作用。但是 R3要使得 R满足旋转矩阵的性质，即列与列之间单位正交，因此可以通过向量 R1,R2的叉乘，即 R3 = R1×R2，计算得到R3。</p>
+<h3 id="参数优化">参数优化</h3>
+<p>以上推导都是假设不存在畸变参数的情况下成立的。但是事实上，相机是存在畸变参数的，因此，张正友标定法还需要通过极大似然估计对参数进行优化。<br>
+$$<br>
+\sum_{i=1}^{n}\sum_{j=1}^{m}|\mathbf{m}<em>{ij}-\hat{\mathbf{m}}(\mathbf{A},\mathbf{R}</em>{i},\mathbf{t}<em>{i},\mathbf{M}</em>{j})|^{2}<br>
+$$<br>
+A为内参；R,t为外参；m为2d点；M为3d点</p>
+<h3 id="畸变">畸变</h3>
+<p>首先是径向畸变，顾名思义，径向畸变就是沿着透镜半径方向分布的畸变，产生原因是光线在原理透镜中心的地方比靠近中心的地方更加弯曲，这种畸变在普通廉价的镜头中表现更加明显，径向畸变主要包括桶形畸变（K&gt;0）和枕形畸变两种。以下分别是枕形和桶形畸变示意图：</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/%E5%B1%80%E9%83%A8%E6%88%AA%E5%8F%96_20250514_145821.png" alt="局部截取_20250514_145821"><br>
+$$<br>
+x_{0}=x(1+k_1r^2+k_2r^4+k_3r^6)\y_{0}=y(1+k_{1}r^{2}+k_{2}r^{4}+k_{3}r^{6})<br>
+$$<br>
+其次是切向畸变，切向畸变是由于透镜本身与相机传感器平面（像平面）或图像平面不平行而产生的，这种情况多是由于透镜被粘贴到镜头模组上的安装偏差导致。畸变模型可以用两个额外的参数p1和p2来描述：<br>
+$$<br>
+x_{0}=x+[2p_{1}y+p_{2}(r^{2}+2x^{2})]\y_{0}=y+[2p_{2}x+p_{1}(r^{2}+2y^{2})]<br>
+$$<br>
+张正友标定法仅仅考虑了畸变模型中影响较大的径向畸变。<br>
+$$<br>
+\hat{x}=x\left(1+k_1r^2+k_2r^4\right)\\hat{y}=y\left(1+k_1r^2+k_2r^4\right)<br>
+$$<br>
+当x轴和y轴夹角θ 接近于 90°时<br>
+$$<br>
+u=\frac{x}{dX}+u_0\v=\frac{y}{dY}+v_0<br>
+$$<br>
+同理可得畸变后的像素坐标的表达式为：<br>
+$$<br>
+\begin{aligned}&amp;\hat{u}=\frac{\hat{x}}{dX}+u_0\&amp;\hat{v}=\frac{\hat{y}}{dY}+v_0\end{aligned}<br>
+$$<br>
+二者做差，并进行变换以后得到<br>
+$$<br>
+\begin{bmatrix}\left(u-u_0\right)r^2&amp;\left(u-u_0\right)r^4\\left(v-v_0\right)r^2&amp;\left(v-v_0\right)r^4\end{bmatrix}\begin{bmatrix}k_1\k_2\end{bmatrix}=\begin{bmatrix}\hat{u}-u\\hat{v}-v\end{bmatrix}<br>
+$$<br>
+记约束矩阵为D，则原式变为Dk=d，利用最小二乘法可得：<br>
+$$<br>
+k=\begin{bmatrix}k_1\k_2\end{bmatrix}=\begin{pmatrix}D^TD\end{pmatrix}^{-1}D^Td<br>
+$$<br>
+此时，相机的畸变矫正参数已经标定好。</p>
+<p>那么，如何获得畸变后的像素坐标 $(\hat{u},\hat{v})$和理想的无畸变的像素坐标 $(u,v)$呢？</p>
+<p>$(\hat{u},\hat{v}$) 可以通过识别标定板的角点获得，$(u,v)$​可以通过如下方法近似求得:<br>
+$$<br>
+Z\begin{pmatrix}u\v\1\end{pmatrix}=A(R1\quad R2\quad T)\begin{pmatrix}U\V\1\end{pmatrix}=H\begin{pmatrix}U\V\1\end{pmatrix}<br>
+$$<br>
+当然，由于外参矩阵 ( <em>R</em>1 <em>R</em>2 <em>T</em> ) 和内参矩阵 <em>A</em> 是在有畸变的情况下获得的，这里得到的像素坐标*)*并不是完全理想的、无畸变的。我们的总逻辑是，在进行内参矩阵和外参矩阵的求解的时候，我们假设不存在畸变；在进行畸变系数的求解的时候，我们假设求得的内参矩阵和外参矩阵是无误差的。</p>
+<h2 id="双目标定">双目标定</h2>
+<p>双目立体视觉的原理很简单，通过同一物体在两个图片中的视差和两个镜头光轴间的距离（基线），利用相似三角形就可以简单求出物体的距离。</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/76bbf59e0e7e582b491a0b79d0d01f10.png" alt="img"></p>
+<p>两个相机的投影中心的连线的距离为 b，也叫做基线，三维空间任意一点 P 在左相机的成像点为 PL，在右相机的成像点为PR。根据光的直线传播的原理可知，三维空间点 P 就是两个相机的投影中心点与成像点连线的交点。线段L和R分别是左右相机成像点到左成像面的距离，则点 P 在左右相机的视差可以定义如下:<br>
+$$<br>
+d=|x_L-x_R|<br>
+$$<br>
+两个成像点PL和PR之间的距离为：<br>
+$$<br>
+P_{L}P_{R}=b-\left(x_{L}-\frac{L}{2}\right)-\left(\frac{L}{2}-x_{R}\right)=b-\left(x_{L}-x_{R}\right)<br>
+$$<br>
+根据相似三角形理论可以得出：<br>
+$$<br>
+\frac{b-(x_{L}-x_{R})}{Z-f}=\frac{b}{Z}<br>
+$$<br>
+以此得到深度z。</p>
+<p>此计算的基础是：两个摄像机的成像平面在同一平面上，当然为了计算简单，我们还希望两个相机的中心能水平对齐，这样我们计算视差只需要用到两个图像单个坐标方向上值。 但是在实中是不存在完全共面的两个镜头的，所以在双目相机的标定中，我们除了确定单个相机的内外参数、对图像的畸变进行校正外，还需要对进行立体校正，立体校正的目的就是将实际中非共面对准的两个图像，校正到共面对准，注意这是对图像做的，因为相机镜头已经固定了。</p>
+<p>双目标定在对左右相机分别进行单目标定的基础上运行，目的是得到左右相机之间的旋转变换矩阵，前后模型如下</p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-03a212719e9084f0ab4c6aabdf68e48c_r.jpg" alt="img"></p>
+<p><img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/v2-c1a8194a2b253598f7b049cddb7235f7_r.jpg" alt="img"></p>
+<p>另外，右相机主点相对于左相机主点，显然还有：$P_r=R\cdot P_l+T$，另外旋转矩阵R是正交矩阵。根据正交矩阵的性质，矩阵的逆等于矩阵的转置，即$R^{-1}=R^{T}$</p>
+<p>所以，<br>
+$$<br>
+\left{\begin{array}{l}R=R_rR_l^T\T=T_r-RT_l\end{array}\right.<br>
+$$<br>
+<img src="https://raw.githubusercontent.com/xiaole-cumt/blog-img/main/image-20250514152421835.png" alt="image-20250514152421835"></p>
+<p>双目立体视觉的原理很简单，通过同一物体在两个图片中的视差和两个镜头光轴间的距离（基线），利用相似三角形就可以简单求出物体的距离。</p>
+<p>此计算的基础是：两个摄像机的成像平面在同一平面上，当然为了计算简单，我们还希望两个相机的中心能水平对齐，这样我们计算视差只需要用到两个图像单个坐标方向上值。 但是在实中是不存在完全共面的两个镜头的，所以在双目相机的标定中，我们除了确定单个相机的内外参数、对图像的畸变进行校正外，还需要对进行立体校正，立体校正的目的就是将实际中非共面对准的两个图像，校正到共面对准，注意这是对图像做的，因为相机镜头已经固定了。</p>
+<h2 id="参考文献：">参考文献：</h2>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/503618448">双目相机标定理论总结</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_49110168/article/details/144500169?ops_request_misc=%257B%2522request%255Fid%2522%253A%252299cdaa8e567919da17073f393ef20ef5%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&amp;request_id=99cdaa8e567919da17073f393ef20ef5&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_click~default-4-144500169-null-null.142%5Ev102%5Epc_search_result_base3&amp;utm_term=%E5%8F%8C%E7%9B%AE%E7%9B%B8%E6%9C%BA%E6%A0%87%E5%AE%9A&amp;spm=1018.2226.3001.4187">OpenCV-Python实现双目相机标定</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_61238051/article/details/120737470">机器视觉——双目视觉的基础知识（视差深度、标定、立体匹配）</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/04/14/end%20to%20end%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%A7%A3%E6%9E%90/" rel="prev" title="end to end附加">
+      <i class="fa fa-chevron-left"></i> end to end附加
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">相机标定</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%90%E6%A0%87%E7%B3%BB%E5%8F%98%E6%8D%A2"><span class="nav-number">1.1.</span> <span class="nav-text">坐标系变换</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%96%E7%95%8C%E5%88%B0%E7%9B%B8%E6%9C%BA"><span class="nav-number">1.1.1.</span> <span class="nav-text">世界到相机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E6%9C%BA%E5%88%B0%E5%9B%BE%E5%83%8F"><span class="nav-number">1.1.2.</span> <span class="nav-text">相机到图像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E5%88%B0%E5%83%8F%E7%B4%A0"><span class="nav-number">1.1.3.</span> <span class="nav-text">图像到像素</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%A0%E6%AD%A3%E5%8F%8B%E6%A0%87%E5%AE%9A%E6%B3%95-%E5%8D%95%E7%9B%AE"><span class="nav-number">1.2.</span> <span class="nav-text">张正友标定法(单目)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E5%BA%94%E6%80%A7%E7%9F%A9%E9%98%B5"><span class="nav-number">1.2.1.</span> <span class="nav-text">单应性矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%8F%82%E7%9F%A9%E9%98%B5"><span class="nav-number">1.2.2.</span> <span class="nav-text">内参矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%96%E5%8F%82%E7%9F%A9%E9%98%B5"><span class="nav-number">1.2.3.</span> <span class="nav-text">外参矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E4%BC%98%E5%8C%96"><span class="nav-number">1.2.4.</span> <span class="nav-text">参数优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%95%B8%E5%8F%98"><span class="nav-number">1.2.5.</span> <span class="nav-text">畸变</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8C%E7%9B%AE%E6%A0%87%E5%AE%9A"><span class="nav-number">1.3.</span> <span class="nav-text">双目标定</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE%EF%BC%9A"><span class="nav-number">1.4.</span> <span class="nav-text">参考文献：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">小乐</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2024 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">小乐</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
